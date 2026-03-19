@@ -1,16 +1,21 @@
 use memmap2::Mmap;
-use object::{File, Object, ObjectSection, ObjectSymbol, SectionKind, SymbolKind};
+use object::{File, Object, ObjectSection, SectionKind};
 use rayon::prelude::*;
 use std::fs::File as StdFile;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use zydis::{Decoder, MachineMode, StackWidth, NoOperands};
 
-/// Representa uma unidade de código a ser analisada (Função ou Seção).
+/// Constante de granularidade para o paralelismo massivo.
+/// Chunks de 16KB permitem que seções grandes sejam divididas entre todos os núcleos da CPU.
+const CHUNK_SIZE: usize = 16 * 1024;
+
+/// Representa uma fatia de código (Chunk) para processamento paralelo.
 #[derive(Debug, Clone)]
-struct CodeUnit {
+struct CodeChunk {
     name: String,
     address: u64,
-    size: u64,
+    offset: usize,
+    size: usize,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -22,13 +27,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let path = &args[1];
     println!("[*] DEEP_BLEED Engine v0.1.0 starting...");
-    println!("[*] Mapping: {}", path);
+    println!("[*] Hyper-Parallel Mode: ENABLED");
 
     // Mapeamento de memória de alta performance (Zero-copy)
     let file = StdFile::open(path)?;
     let mmap = unsafe { Mmap::map(&file)? };
 
-    // Parsing do binário (PE/ELF/Mach-O suportados pelo crate 'object')
+    // Parsing do binário
     let obj = File::parse(&*mmap)?;
     
     // Determinação precisa do modo de CPU
@@ -40,72 +45,53 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("[+] Target Arch: {:?}", obj.architecture());
 
-    // 1. Identificação de "Code Units" (Funções, Exportações e Seções)
-    let mut code_units = Vec::new();
+    // 1. Fragmentação Massiva (Chunking)
+    // Para garantir hiper-paralelismo, não processamos por seção, mas por pedaços fixos.
+    let mut code_chunks = Vec::new();
 
-    // Extrair funções de símbolos definidos
-    for symbol in obj.symbols() {
-        if symbol.kind() == SymbolKind::Text && symbol.size() > 0 {
-            code_units.push(CodeUnit {
-                name: symbol.name().unwrap_or("sym_func").to_string(),
-                address: symbol.address(),
-                size: symbol.size(),
-            });
-        }
-    }
-
-    // Adicionar Exportações (Crítico para PEs sem símbolos de debug)
-    if let Ok(exports) = obj.exports() {
-        for export in exports {
-            code_units.push(CodeUnit {
-                name: format!("export:{}", String::from_utf8_lossy(export.name())),
-                address: export.address(),
-                size: 0, // Tamanho desconhecido via export table
-            });
-        }
-    }
-
-    // Seções executáveis para varredura completa
+    // Seções executáveis
     let exec_sections: Vec<_> = obj.sections()
         .filter(|s| s.kind() == SectionKind::Text)
         .collect();
 
     for sec in &exec_sections {
-        code_units.push(CodeUnit {
-            name: format!(".section:{}", sec.name().unwrap_or("?")),
-            address: sec.address(),
-            size: sec.size(),
-        });
+        let sec_data = sec.data()?;
+        let sec_addr = sec.address();
+        let sec_name = sec.name().unwrap_or("?");
+        
+        let mut current_pos = 0;
+        while current_pos < sec_data.len() {
+            let chunk_len = (sec_data.len() - current_pos).min(CHUNK_SIZE);
+            code_chunks.push(CodeChunk {
+                name: format!("{}:chunk_{:0X}", sec_name, current_pos),
+                address: sec_addr + current_pos as u64,
+                offset: sec.file_range().unwrap_or((0,0)).0 as usize + current_pos, // Usamos offset do arquivo
+                size: chunk_len,
+            });
+            current_pos += chunk_len;
+        }
     }
 
-    println!("[*] Identified {} code units for parallel processing.", code_units.len());
+    println!("[*] Generated {} chunks for parallel execution across all CPU cores.", code_chunks.len());
 
     let total_inst = AtomicUsize::new(0);
 
-    // 2. Disassembling Massivo Paralelo
-    code_units.par_iter().for_each(|unit| {
-        // Encontrar os dados brutos
-        let data = obj.sections()
-            .find(|s| unit.address >= s.address() && unit.address < s.address() + s.size())
-            .and_then(|s| {
-                let offset = (unit.address - s.address()) as usize;
-                let section_data = s.data().ok()?;
-                let end = if unit.size > 0 {
-                    (offset + unit.size as usize).min(section_data.len())
-                } else {
-                    section_data.len()
-                };
-                Some(&section_data[offset..end])
-            });
-
-        if let Some(raw_code) = data {
+    // 2. Disassembling Massivo Paralelo (Rayon)
+    // Agora o Rayon terá centenas de pequenos jobs para distribuir entre todas as CPUs.
+    code_chunks.par_iter().for_each(|chunk| {
+        // Obter os bytes brutos do chunk diretamente do Mmap (Thread-safe)
+        let end = chunk.offset + chunk.size;
+        if let Some(raw_code) = mmap.get(chunk.offset..end) {
+            
+            // Cada Worker Thread reinicializa o Zydis (lock-free)
             let decoder = Decoder::new(machine_mode, stack_width)
                 .expect("Critical: Failed to initialize Zydis decoder");
 
             let mut local_count = 0;
             
-            // Sweep linear
-            for item in decoder.decode_all::<NoOperands>(raw_code, unit.address) {
+            // Sweep linear sincronizado por chunk
+            // Nota técnica: x86 sincroniza sua instrução em poucos bytes mesmo se começarmos no meio.
+            for item in decoder.decode_all::<NoOperands>(raw_code, chunk.address) {
                 if item.is_ok() {
                     local_count += 1;
                 }
@@ -113,18 +99,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             total_inst.fetch_add(local_count, Ordering::Relaxed);
             
-            if local_count > 0 && unit.size > 0 {
-                // Notifica o processamento de funções identificadas (evita spam de seções massivas)
-                println!(
-                    "[+] Worker Thread | Unit: {:<30} | Inst: {:<8} | VA: 0x{:012X}",
-                    unit.name, local_count, unit.address
-                );
-            }
+            // Feedback de progresso (opcional, pode ser barulhento em bins gigantes)
+            // println!("[+] Worker [{:?}] | Processed {} instructions at 0x{:012X}", std::thread::current().id(), local_count, chunk.address);
         }
     });
 
     println!("--------------------------------------------------");
-    println!("[!] Paralelismo concluído com sucesso.");
+    println!("[!] Paralelismo Massivo concluído.");
     println!("[!] Instruções Totais Processadas: {}", total_inst.load(Ordering::SeqCst));
 
     Ok(())
