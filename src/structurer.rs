@@ -299,11 +299,12 @@ impl<'a> CfgGraph<'a> {
     pub fn reachable_limited(&self, start: &'a str) -> FnvHashSet<&'a str> {
         let mut visited = FnvHashSet::default();
         let mut stack = vec![start];
-        // Limit search to 512 nodes per path to avoid O(N^2) blowup on extreme cases
-        // while still finding merges for most real code.
+        // Note: Removing the 512 limit because premature break causes
+        // find_merge to fail, triggering catastrophic O(2^N) exponential
+        // code duplication of the rest of the graph in if-branches.
         let mut count = 0;
         while let Some(node) = stack.pop() {
-            if count > 512 { break; }
+            // if count > 512 { break; } // DELETED CAUSE OF 50GB MEMORY LEAK!
             if visited.insert(node) {
                 count += 1;
                 if let Some(succs) = self.succs.get(node) {
@@ -499,7 +500,7 @@ fn structure_region<'a>(
             if fwd_succs.is_empty() {
                 let body_nodes = graph.collect_region(loop_header, None);
                 let mut body_visited = visited.clone();
-                let body = structure_region_list(graph, &body_nodes, &mut body_visited, func, depth + 1);
+                let body = structure_region_list(graph, &body_nodes, &mut body_visited, func, depth + 1, None);
                 result.push(CfgStructure::InfiniteLoop { body });
                 break;
             } else {
@@ -508,9 +509,8 @@ fn structure_region<'a>(
                 if cur == loop_header {
                     let cond = extract_block_condition(block);
                     let body_nodes = graph.collect_region(cur, Some(exit));
-                    let mut body_visited = FnvHashSet::default();
-                    body_visited.insert(cur);
-                    let body = structure_region_list(graph, &body_nodes, &mut body_visited, func, depth + 1);
+                    let mut body_visited = visited.clone();
+                    let body = structure_region_list(graph, &body_nodes, &mut body_visited, func, depth + 1, Some(exit));
                     result.push(CfgStructure::While {
                         cond: cond.unwrap_or_else(|| CCondition {
                             lhs: "1".into(), op: CondOp::IsNonZero, rhs: String::new()
@@ -523,8 +523,8 @@ fn structure_region<'a>(
                 } else {
                     let cond = extract_block_condition(block);
                     let body_nodes = graph.collect_region(loop_header, Some(cur));
-                    let mut body_visited = FnvHashSet::default();
-                    let mut body = structure_region_list(graph, &body_nodes, &mut body_visited, func, depth + 1);
+                    let mut body_visited = visited.clone();
+                    let mut body = structure_region_list(graph, &body_nodes, &mut body_visited, func, depth + 1, Some(cur));
                     body.push(CfgStructure::Block(make_flat_block(block, None)));
                     result.push(CfgStructure::DoWhile {
                         cond: cond.unwrap_or_else(|| CCondition {
@@ -545,52 +545,49 @@ fn structure_region<'a>(
 
             let merge_pt = graph.find_merge(true_succ, false_succ);
 
-            let cond = extract_block_condition(block);
-            let cond = cond.unwrap_or_else(|| CCondition {
-                lhs: "?".into(), op: CondOp::IsNonZero, rhs: String::new()
-            });
+            // CRITICAL: If no merge point is found, we CANNOT safely structure this
+            // as an if/else because collect_arm would return the entire rest of the
+            // function as arm nodes, causing exponential O(2^N) duplication and OOM.
+            // Fall through to plain block emission instead.
+            if let Some(merge) = merge_pt {
+                let cond = extract_block_condition(block);
+                let cond = cond.unwrap_or_else(|| CCondition {
+                    lhs: "?".into(), op: CondOp::IsNonZero, rhs: String::new()
+                });
 
-            let flat = make_flat_block_strip_cmp_jump(block);
-            if !flat.instructions.is_empty() {
-                result.push(CfgStructure::Block(flat));
-            }
+                let flat = make_flat_block_strip_cmp_jump(block);
+                if !flat.instructions.is_empty() {
+                    result.push(CfgStructure::Block(flat));
+                }
 
-            let (then_nodes, else_nodes) = (
-                collect_arm(graph, true_succ, merge_pt),
-                collect_arm(graph, false_succ, merge_pt),
-            );
+                let then_nodes = collect_arm(graph, true_succ, Some(merge));
+                let else_nodes = collect_arm(graph, false_succ, Some(merge));
 
-            let mut then_visited = FnvHashSet::default();
-            for &n in &then_nodes { then_visited.insert(n); }
-            let then_body = structure_region_list(graph, &then_nodes, &mut then_visited, func, depth + 1);
+                let mut then_visited = visited.clone();
+                let then_body = structure_region_list(graph, &then_nodes, &mut then_visited, func, depth + 1, Some(merge));
 
-            let else_body = if !else_nodes.is_empty() {
-                let mut else_visited = FnvHashSet::default();
-                for &n in &else_nodes { else_visited.insert(n); }
-                let eb = structure_region_list(graph, &else_nodes, &mut else_visited, func, depth + 1);
-                if eb.is_empty() { None } else { Some(eb) }
-            } else {
-                None
-            };
+                let else_body = if !else_nodes.is_empty() {
+                    let mut else_visited = visited.clone();
+                    let eb = structure_region_list(graph, &else_nodes, &mut else_visited, func, depth + 1, Some(merge));
+                    if eb.is_empty() { None } else { Some(eb) }
+                } else {
+                    None
+                };
 
-            for &n in &then_nodes { visited.insert(n); }
-            if else_body.is_some() {
-                for n in collect_arm(graph, false_succ, merge_pt) { visited.insert(n); }
-            }
+                for &n in &then_nodes { visited.insert(n); }
+                for &n in &else_nodes { visited.insert(n); }
 
-            result.push(CfgStructure::If {
-                cond,
-                then: then_body,
-                else_: else_body,
-                merge_block: merge_pt.map(|s| s.to_string()),
-            });
+                result.push(CfgStructure::If {
+                    cond,
+                    then: then_body,
+                    else_: else_body,
+                    merge_block: Some(merge.to_string()),
+                });
 
-            if let Some(mp) = merge_pt {
-                cur = mp;
+                cur = merge;
                 continue;
-            } else {
-                break;
             }
+            // else: fall through to plain block emission below
         }
 
         // ── PLAIN BLOCK (also fallback when depth >= MAX_DEPTH) ──
@@ -628,11 +625,14 @@ fn structure_region_list<'a>(
     visited: &mut FnvHashSet<&'a str>,
     func: &'a JsonFunction,
     depth: usize,
+    merge: Option<&'a str>,
 ) -> Vec<CfgStructure> {
     let mut result = Vec::new();
     for &n in nodes {
-        let sub = structure_region(graph, n, None, visited, func, depth);
-        result.extend(sub);
+        if !visited.contains(n) {
+            let sub = structure_region(graph, n, merge, visited, func, depth);
+            result.extend(sub);
+        }
     }
     result
 }
@@ -641,17 +641,26 @@ fn structure_region_list<'a>(
 /// Collect nodes belonging to a conditional arm (between start and merge)
 fn collect_arm<'a>(graph: &CfgGraph<'a>, start: &'a str, merge: Option<&'a str>) -> Vec<&'a str> {
     if Some(start) == merge { return vec![]; }
-    let start_idx = *graph.rpo_indices.get(start).unwrap_or(&0);
-    let end_idx = merge.and_then(|e| graph.rpo_indices.get(e)).copied().unwrap_or(usize::MAX);
-
-    let arm: Vec<&str> = graph.order.iter()
-        .copied()
-        .enumerate()
-        .filter(|(idx, _n)| {
-            *idx >= start_idx && *idx < end_idx
-        })
-        .map(|(_, n)| n)
-        .collect();
+    
+    let mut visited = FnvHashSet::default();
+    let mut stack = vec![start];
+    
+    while let Some(node) = stack.pop() {
+        if Some(node) == merge { continue; }
+        if visited.insert(node) {
+            if let Some(succs) = graph.succs.get(node) {
+                for &s in succs {
+                    if !graph.back_edges.contains(&(node, s)) {
+                        stack.push(s);
+                    }
+                }
+            }
+        }
+    }
+    
+    let mut arm: Vec<&str> = visited.into_iter().collect();
+    // Sort by RPO order to maintain topological execution order
+    arm.sort_by_key(|n| graph.rpo_indices.get(*n).copied().unwrap_or(usize::MAX));
     arm
 }
 
@@ -733,29 +742,32 @@ fn make_flat_block_strip_cmp_jump(block: &JsonBlock) -> FlatBlock {
 pub fn is_prologue_epilogue_noise(insn: &JsonInstruction) -> bool {
     match insn.op.as_str() {
         "push" => {
-            // push ebp / push rbp / push esi / push edi / push ebx — callee-saved = noise
             let r = insn.src.get(0).map(|s| s.as_str()).unwrap_or("");
             matches!(r, "ebp" | "rbp" | "esi" | "edi" | "ebx" | "rsi" | "rdi" | "rbx"
-                     | "esp_0" | "ebp_0" | "rbp_0")
+                     | "esp_0" | "ebp_0" | "rbp_0"
+                     | "r12" | "r13" | "r14" | "r15")
         }
         "pop" => {
             let r = insn.dst.as_deref().unwrap_or("");
             matches!(r, "ebp" | "rbp" | "esi" | "edi" | "ebx" | "rsi" | "rdi" | "rbx"
-                     | "esp_0" | "ebp_0" | "rbp_0")
+                     | "esp_0" | "ebp_0" | "rbp_0"
+                     | "r12" | "r13" | "r14" | "r15")
         }
         "assign" => {
-            // mov ebp, esp / mov rbp, rsp  — frame setup
             let dst = insn.dst.as_deref().unwrap_or("");
             let src = insn.src.get(0).map(|s| s.as_str()).unwrap_or("");
             (dst.contains("ebp") && src.contains("esp"))
             || (dst.contains("rbp") && src.contains("rsp"))
-            // sub esp, N — stack alloc, keep
+        }
+        "sub" | "add" | "and" => {
+            let dst = insn.dst.as_deref().unwrap_or("");
+            let src = insn.src.get(0).map(|s| s.as_str()).unwrap_or("");
+            (dst.contains("rsp") && src.contains("rsp")) || (dst.contains("esp") && src.contains("esp"))
         }
         _ => false,
     }
 }
 
-/// Clean up an instruction's display for C output
 pub fn prettify_operand(s: &str) -> String {
     // Replace SSA-style rax_0 with just var_rax or keep as-is
     // If it's a local_mXX (negative offset), show as var_N
@@ -765,6 +777,22 @@ pub fn prettify_operand(s: &str) -> String {
     if let Some(rest) = s.strip_prefix("local_") {
         return format!("arg_{}", rest);
     }
-    // SSA var rax_0 → keep as is (it's already pretty)
+    // Fix square brackets [rbx+0x10] -> *(uintptr_t*)(rbx+0x10)
+    if s.contains('[') {
+        let mut out = String::new();
+        let chars: Vec<char> = s.chars().collect();
+        let mut i = 0;
+        while i < chars.len() {
+            if chars[i] == '[' {
+                out.push_str("*(uintptr_t*)(");
+            } else if chars[i] == ']' {
+                out.push(')');
+            } else {
+                out.push(chars[i]);
+            }
+            i += 1;
+        }
+        return out;
+    }
     s.to_string()
 }

@@ -15,6 +15,8 @@ pub struct ResolvedData {
     pub exports: FnvHashMap<u64, String>,
     /// Combined: VA → human name (imports + exports + symbols)
     pub names: FnvHashMap<u64, String>,
+    /// VA of a pointer -> String it points to (Medium Confidence Injection)
+    pub ptr_to_string: FnvHashMap<u64, String>,
 }
 
 impl ResolvedData {
@@ -52,8 +54,11 @@ pub fn build_resolved_data(mmap: &[u8], obj: &object::File<'_>) -> ResolvedData 
         data.names.insert(addr, name.clone());
     }
 
-    println!("[+] Resolved: {} strings, {} imports, {} exports",
-        data.strings.len(), data.imports.len(), data.exports.len());
+    // 6) Precompute Static Pointer-to-String values for Medium Confidence Decompilation
+    extract_string_pointers(obj, is_64bit, &mut data);
+
+    println!("[+] Resolved: {} strings, {} static pointers to strings, {} imports, {} exports",
+        data.strings.len(), data.ptr_to_string.len(), data.imports.len(), data.exports.len());
 
     data
 }
@@ -341,4 +346,39 @@ fn read_cstring(data: &[u8], offset: usize) -> String {
     let mut end = offset;
     while end < data.len() && data[end] != 0 { end += 1; }
     String::from_utf8_lossy(&data[offset..end]).to_string()
+}
+
+/// Medium Confidence Pre-computation: Scan memory for pointers to known strings
+fn extract_string_pointers(obj: &object::File<'_>, is_64bit: bool, data: &mut ResolvedData) {
+    let ptr_size = if is_64bit { 8 } else { 4 };
+    
+    for section in obj.sections() {
+        let kind = section.kind();
+        // We scan ReadOnlyData, Data, and Text since jump tables/pointer arrays could be anywhere
+        if kind != SectionKind::ReadOnlyData && kind != SectionKind::Data 
+            && kind != SectionKind::Text && kind != SectionKind::UninitializedData {
+            continue;
+        }
+
+        if let Ok(sec_data) = section.data() {
+            let sec_addr = section.address();
+            let mut i = 0;
+            
+            while i + ptr_size <= sec_data.len() {
+                let ptr_val = if is_64bit {
+                    u64::from_le_bytes(sec_data[i..i+8].try_into().unwrap_or([0; 8]))
+                } else {
+                    u32::from_le_bytes(sec_data[i..i+4].try_into().unwrap_or([0; 4])) as u64
+                };
+                
+                if ptr_val > 0 {
+                    if let Some(s) = data.strings.get(&ptr_val) {
+                        data.ptr_to_string.insert(sec_addr + i as u64, s.clone());
+                    }
+                }
+                
+                i += ptr_size;
+            }
+        }
+    }
 }

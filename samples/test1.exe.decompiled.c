@@ -150,7 +150,7 @@ int __mingw_GetSectionCount(void); /* USER @ 0x1400023A0 */
 void _GetPEImageBase(void); /* USER @ 0x140002460 */
 void ___chkstk_ms(void); /* USER @ 0x1400025F0 */
 void __mingw_vfprintf(void); /* USER @ 0x140002630 */
-void __pformat_cvt(void); /* USER @ 0x140002680 */
+void __pformat_cvt(int param_1); /* USER @ 0x140002680 */
 void __pformat_putc(void); /* USER @ 0x140002770 */
 void __pformat_wputchars(void); /* USER @ 0x1400027D0 */
 void __pformat_putchars(void); /* USER @ 0x140002970 */
@@ -244,1222 +244,1537 @@ void __tmainCRTStartup(int argc, char** argv, char** envp) {
     int32_t r13;
     uint64_t r8;
 
-    t1 = rsp - 40;
-    t2 = &[rsp+0x20];
+    t1 = &*(uintptr_t*)(rsp+0x20);
+    t2 = 0;
+    t3 = *(DWORD*)0x30;
+    t4 = *(uintptr_t*)(rax+0x8);
     t3 = rdi;
-    [rbx+0x0] = cmpxchg([rbx+0x0], rsi);
+    *(uintptr_t*)(rbx+0x0) = cmpxchg(*(uintptr_t*)(rbx+0x0), rsi);
     if (t3 != 0) {
     }
-    t3 = [rsi+0x0];
+    t4 = *(DWORD*)0x1400097D9;
+    t2 = 0;
+    t3 = *(uintptr_t*)(rsi+0x0);
     if (t3 == 1) {
     }
     if (rdi == 0) {
     }
-    t4 = [rax+0x0];
-    if (t4 == 0) {
+    t3 = *(DWORD*)0x140009729;
+    t6 = *(uintptr_t*)(rax+0x0);
+    if (t6 == 0) {
     }
-    t7 = rdi - 8;
-    strlen();
-    t11 = &[rax+0x1];
-    [r12+0x0] = malloc();
-    t12 = 0 + 8;
-    memcpy();
-    /* compare t7 vs t12 */
-    strlen();
-    t11 = &[rax+0x1];
-    [r12+0x0] = malloc();
-    t6 = rbx + 8;
-    memcpy();
-    /* compare rdi vs t6 */
-    t7 = rdi + r12;
-    [rdi+0x0] = 0;
+    t2 = rdi - 8;
+    t5 = *(uintptr_t*)(r13+0x0);
+    strlen(*(uintptr_t*)(r13+0x0));
+    t4 = &*(uintptr_t*)(rax+0x1);
+    t8 = t4;
+    malloc(rsi_0);
+    t16 = t4;
+    *(uintptr_t*)(r12+0x0) = rax;
+    t7 = *(uintptr_t*)(r13+0x0);
+    t10 = rax;
+    t17 = 0 + 8;
+    memcpy(rax, *(uintptr_t*)(r13+0x0), rsi_0);
+    t5 = *(uintptr_t*)(r13+0x0);
+    strlen(*(uintptr_t*)(r13+0x0));
+    t4 = &*(uintptr_t*)(rax+0x1);
+    t8 = t4;
+    malloc(rsi_0);
+    t16 = t4;
+    *(uintptr_t*)(r12+0x0) = rax;
+    t7 = *(uintptr_t*)(r13+0x0);
+    t10 = rax;
+    t11 = rbx + 8;
+    memcpy(rax, *(uintptr_t*)(r13+0x0), rsi_0);
+    t2 = rdi + r12;
+    *(uintptr_t*)(rdi+0x0) = 0;
     *(DWORD*)0x14000C019 = r12;
-    __main();
-    t13 = *(DWORD*)0x14000C011;
-    t4 = [rax+0x0];
-    [rax+0x0] = t13;
-    main();
-    t10 = *(DWORD*)0x14000C006;
-    *(DWORD*)0x14000C00A = t4;
-    /* compare t10 vs t10 */
+    __main(*(DWORD*)0x14000C006);
+    t3 = *(DWORD*)0x140009749;
+    t16 = *(DWORD*)0x14000C011;
+    t5 = *(DWORD*)0x14000C022;
+    t6 = *(uintptr_t*)(rax+0x0);
+    *(uintptr_t*)(rax+0x0) = t16;
+    t7 = r12;
+    main(*(DWORD*)0x14000C022, *(DWORD*)0x14000C019, *(DWORD*)0x14000C011);
+    t8 = *(DWORD*)0x14000C006;
+    *(DWORD*)0x14000C00A = t6;
     do {
         t3 = rdi;
-        [rbx+0x0] = cmpxchg([rbx+0x0], rsi);
+        *(uintptr_t*)(rbx+0x0) = cmpxchg(*(uintptr_t*)(rbx+0x0), rsi);
         if (t3 != 0) {
         }
-        t3 = [rsi+0x0];
+        t4 = *(DWORD*)0x1400097D9;
+        t2 = 0;
+        t3 = *(uintptr_t*)(rsi+0x0);
         if (t3 == 1) {
         }
         if (rdi == 0) {
         }
-        t4 = [rax+0x0];
-        if (t4 == 0) {
+        t3 = *(DWORD*)0x140009729;
+        t6 = *(uintptr_t*)(rax+0x0);
+        if (t6 == 0) {
         }
-        t7 = rdi - 8;
-        strlen();
-        t11 = &[rax+0x1];
-        [r12+0x0] = malloc();
-        t12 = 0 + 8;
-        memcpy();
-        /* compare t7 vs t12 */
-        strlen();
-        t11 = &[rax+0x1];
-        [r12+0x0] = malloc();
-        t6 = rbx + 8;
-        memcpy();
-        /* compare rdi vs t6 */
-        t7 = rdi + r12;
-        [rdi+0x0] = 0;
+        t2 = rdi - 8;
+        t5 = *(uintptr_t*)(r13+0x0);
+        strlen(*(uintptr_t*)(r13+0x0));
+        t4 = &*(uintptr_t*)(rax+0x1);
+        t8 = t4;
+        malloc(rsi_0);
+        t16 = t4;
+        *(uintptr_t*)(r12+0x0) = rax;
+        t7 = *(uintptr_t*)(r13+0x0);
+        t10 = rax;
+        t17 = 0 + 8;
+        memcpy(rax, *(uintptr_t*)(r13+0x0), rsi_0);
+        t5 = *(uintptr_t*)(r13+0x0);
+        strlen(*(uintptr_t*)(r13+0x0));
+        t4 = &*(uintptr_t*)(rax+0x1);
+        t8 = t4;
+        malloc(rsi_0);
+        t16 = t4;
+        *(uintptr_t*)(r12+0x0) = rax;
+        t7 = *(uintptr_t*)(r13+0x0);
+        t10 = rax;
+        t11 = rbx + 8;
+        memcpy(rax, *(uintptr_t*)(r13+0x0), rsi_0);
+        t2 = rdi + r12;
+        *(uintptr_t*)(rdi+0x0) = 0;
         *(DWORD*)0x14000C019 = r12;
-        __main();
-        t13 = *(DWORD*)0x14000C011;
-        t4 = [rax+0x0];
-        [rax+0x0] = t13;
-        main();
-        t10 = *(DWORD*)0x14000C006;
-        *(DWORD*)0x14000C00A = t4;
-        /* compare t10 vs t10 */
+        __main(*(DWORD*)0x14000C006);
+        t3 = *(DWORD*)0x140009749;
+        t16 = *(DWORD*)0x14000C011;
+        t5 = *(DWORD*)0x14000C022;
+        t6 = *(uintptr_t*)(rax+0x0);
+        *(uintptr_t*)(rax+0x0) = t16;
+        t7 = r12;
+        main(*(DWORD*)0x14000C022, *(DWORD*)0x14000C019, *(DWORD*)0x14000C011);
+        t8 = *(DWORD*)0x14000C006;
+        *(DWORD*)0x14000C00A = t6;
         do {
             t3 = rdi;
-            [rbx+0x0] = cmpxchg([rbx+0x0], rsi);
+            *(uintptr_t*)(rbx+0x0) = cmpxchg(*(uintptr_t*)(rbx+0x0), rsi);
             if (t3 != 0) {
             }
-            t3 = [rsi+0x0];
+            t4 = *(DWORD*)0x1400097D9;
+            t2 = 0;
+            t3 = *(uintptr_t*)(rsi+0x0);
             if (t3 == 1) {
             }
             if (rdi == 0) {
             }
-            t4 = [rax+0x0];
-            if (t4 == 0) {
+            t3 = *(DWORD*)0x140009729;
+            t6 = *(uintptr_t*)(rax+0x0);
+            if (t6 == 0) {
             }
-            t7 = rdi - 8;
-            strlen();
-            t11 = &[rax+0x1];
-            [r12+0x0] = malloc();
-            t12 = 0 + 8;
-            memcpy();
-            /* compare t7 vs t12 */
-            strlen();
-            t11 = &[rax+0x1];
-            [r12+0x0] = malloc();
-            t6 = rbx + 8;
-            memcpy();
-            /* compare rdi vs t6 */
-            t7 = rdi + r12;
-            [rdi+0x0] = 0;
+            t2 = rdi - 8;
+            t5 = *(uintptr_t*)(r13+0x0);
+            strlen(*(uintptr_t*)(r13+0x0));
+            t4 = &*(uintptr_t*)(rax+0x1);
+            t8 = t4;
+            malloc(rsi_0);
+            t16 = t4;
+            *(uintptr_t*)(r12+0x0) = rax;
+            t7 = *(uintptr_t*)(r13+0x0);
+            t10 = rax;
+            t17 = 0 + 8;
+            memcpy(rax, *(uintptr_t*)(r13+0x0), rsi_0);
+            t5 = *(uintptr_t*)(r13+0x0);
+            strlen(*(uintptr_t*)(r13+0x0));
+            t4 = &*(uintptr_t*)(rax+0x1);
+            t8 = t4;
+            malloc(rsi_0);
+            t16 = t4;
+            *(uintptr_t*)(r12+0x0) = rax;
+            t7 = *(uintptr_t*)(r13+0x0);
+            t10 = rax;
+            t11 = rbx + 8;
+            memcpy(rax, *(uintptr_t*)(r13+0x0), rsi_0);
+            t2 = rdi + r12;
+            *(uintptr_t*)(rdi+0x0) = 0;
             *(DWORD*)0x14000C019 = r12;
-            __main();
-            t13 = *(DWORD*)0x14000C011;
-            t4 = [rax+0x0];
-            [rax+0x0] = t13;
-            main();
-            t10 = *(DWORD*)0x14000C006;
-            *(DWORD*)0x14000C00A = t4;
-            /* compare t10 vs t10 */
+            __main(*(DWORD*)0x14000C006);
+            t3 = *(DWORD*)0x140009749;
+            t16 = *(DWORD*)0x14000C011;
+            t5 = *(DWORD*)0x14000C022;
+            t6 = *(uintptr_t*)(rax+0x0);
+            *(uintptr_t*)(rax+0x0) = t16;
+            t7 = r12;
+            main(*(DWORD*)0x14000C022, *(DWORD*)0x14000C019, *(DWORD*)0x14000C011);
+            t8 = *(DWORD*)0x14000C006;
+            *(DWORD*)0x14000C00A = t6;
             do {
                 t3 = rdi;
-                [rbx+0x0] = cmpxchg([rbx+0x0], rsi);
+                *(uintptr_t*)(rbx+0x0) = cmpxchg(*(uintptr_t*)(rbx+0x0), rsi);
                 if (t3 != 0) {
                 }
-                t3 = [rsi+0x0];
+                t4 = *(DWORD*)0x1400097D9;
+                t2 = 0;
+                t3 = *(uintptr_t*)(rsi+0x0);
                 if (t3 == 1) {
                 }
                 if (rdi == 0) {
                 }
-                t4 = [rax+0x0];
-                if (t4 == 0) {
+                t3 = *(DWORD*)0x140009729;
+                t6 = *(uintptr_t*)(rax+0x0);
+                if (t6 == 0) {
                 }
-                t7 = rdi - 8;
-                strlen();
-                t11 = &[rax+0x1];
-                [r12+0x0] = malloc();
-                t12 = 0 + 8;
-                memcpy();
-                /* compare t7 vs t12 */
-                strlen();
-                t11 = &[rax+0x1];
-                [r12+0x0] = malloc();
-                t6 = rbx + 8;
-                memcpy();
-                /* compare rdi vs t6 */
-                t7 = rdi + r12;
-                [rdi+0x0] = 0;
+                t2 = rdi - 8;
+                t5 = *(uintptr_t*)(r13+0x0);
+                strlen(*(uintptr_t*)(r13+0x0));
+                t4 = &*(uintptr_t*)(rax+0x1);
+                t8 = t4;
+                malloc(rsi_0);
+                t16 = t4;
+                *(uintptr_t*)(r12+0x0) = rax;
+                t7 = *(uintptr_t*)(r13+0x0);
+                t10 = rax;
+                t17 = 0 + 8;
+                memcpy(rax, *(uintptr_t*)(r13+0x0), rsi_0);
+                t5 = *(uintptr_t*)(r13+0x0);
+                strlen(*(uintptr_t*)(r13+0x0));
+                t4 = &*(uintptr_t*)(rax+0x1);
+                t8 = t4;
+                malloc(rsi_0);
+                t16 = t4;
+                *(uintptr_t*)(r12+0x0) = rax;
+                t7 = *(uintptr_t*)(r13+0x0);
+                t10 = rax;
+                t11 = rbx + 8;
+                memcpy(rax, *(uintptr_t*)(r13+0x0), rsi_0);
+                t2 = rdi + r12;
+                *(uintptr_t*)(rdi+0x0) = 0;
                 *(DWORD*)0x14000C019 = r12;
-                __main();
-                t13 = *(DWORD*)0x14000C011;
-                t4 = [rax+0x0];
-                [rax+0x0] = t13;
-                main();
-                t10 = *(DWORD*)0x14000C006;
-                *(DWORD*)0x14000C00A = t4;
-                /* compare t10 vs t10 */
+                __main(*(DWORD*)0x14000C006);
+                t3 = *(DWORD*)0x140009749;
+                t16 = *(DWORD*)0x14000C011;
+                t5 = *(DWORD*)0x14000C022;
+                t6 = *(uintptr_t*)(rax+0x0);
+                *(uintptr_t*)(rax+0x0) = t16;
+                t7 = r12;
+                main(*(DWORD*)0x14000C022, *(DWORD*)0x14000C019, *(DWORD*)0x14000C011);
+                t8 = *(DWORD*)0x14000C006;
+                *(DWORD*)0x14000C00A = t6;
                 do {
                     t3 = rdi;
-                    [rbx+0x0] = cmpxchg([rbx+0x0], rsi);
+                    *(uintptr_t*)(rbx+0x0) = cmpxchg(*(uintptr_t*)(rbx+0x0), rsi);
                     if (t3 != 0) {
                     }
-                    t3 = [rsi+0x0];
+                    t4 = *(DWORD*)0x1400097D9;
+                    t2 = 0;
+                    t3 = *(uintptr_t*)(rsi+0x0);
                     if (t3 == 1) {
                     }
                     if (rdi == 0) {
                     }
-                    t4 = [rax+0x0];
-                    if (t4 == 0) {
+                    t3 = *(DWORD*)0x140009729;
+                    t6 = *(uintptr_t*)(rax+0x0);
+                    if (t6 == 0) {
                     }
-                    t7 = rdi - 8;
-                    strlen();
-                    t11 = &[rax+0x1];
-                    [r12+0x0] = malloc();
-                    t12 = 0 + 8;
-                    memcpy();
-                    /* compare t7 vs t12 */
-                    strlen();
-                    t11 = &[rax+0x1];
-                    [r12+0x0] = malloc();
-                    t6 = rbx + 8;
-                    memcpy();
-                    /* compare rdi vs t6 */
-                    t7 = rdi + r12;
-                    [rdi+0x0] = 0;
+                    t2 = rdi - 8;
+                    t5 = *(uintptr_t*)(r13+0x0);
+                    strlen(*(uintptr_t*)(r13+0x0));
+                    t4 = &*(uintptr_t*)(rax+0x1);
+                    t8 = t4;
+                    malloc(rsi_0);
+                    t16 = t4;
+                    *(uintptr_t*)(r12+0x0) = rax;
+                    t7 = *(uintptr_t*)(r13+0x0);
+                    t10 = rax;
+                    t17 = 0 + 8;
+                    memcpy(rax, *(uintptr_t*)(r13+0x0), rsi_0);
+                    t5 = *(uintptr_t*)(r13+0x0);
+                    strlen(*(uintptr_t*)(r13+0x0));
+                    t4 = &*(uintptr_t*)(rax+0x1);
+                    t8 = t4;
+                    malloc(rsi_0);
+                    t16 = t4;
+                    *(uintptr_t*)(r12+0x0) = rax;
+                    t7 = *(uintptr_t*)(r13+0x0);
+                    t10 = rax;
+                    t11 = rbx + 8;
+                    memcpy(rax, *(uintptr_t*)(r13+0x0), rsi_0);
+                    t2 = rdi + r12;
+                    *(uintptr_t*)(rdi+0x0) = 0;
                     *(DWORD*)0x14000C019 = r12;
-                    __main();
-                    t13 = *(DWORD*)0x14000C011;
-                    t4 = [rax+0x0];
-                    [rax+0x0] = t13;
-                    main();
-                    t10 = *(DWORD*)0x14000C006;
-                    *(DWORD*)0x14000C00A = t4;
-                    /* compare t10 vs t10 */
+                    __main(*(DWORD*)0x14000C006);
+                    t3 = *(DWORD*)0x140009749;
+                    t16 = *(DWORD*)0x14000C011;
+                    t5 = *(DWORD*)0x14000C022;
+                    t6 = *(uintptr_t*)(rax+0x0);
+                    *(uintptr_t*)(rax+0x0) = t16;
+                    t7 = r12;
+                    main(*(DWORD*)0x14000C022, *(DWORD*)0x14000C019, *(DWORD*)0x14000C011);
+                    t8 = *(DWORD*)0x14000C006;
+                    *(DWORD*)0x14000C00A = t6;
                     do {
                         t3 = rdi;
-                        [rbx+0x0] = cmpxchg([rbx+0x0], rsi);
+                        *(uintptr_t*)(rbx+0x0) = cmpxchg(*(uintptr_t*)(rbx+0x0), rsi);
                         if (t3 != 0) {
                         }
-                        t3 = [rsi+0x0];
+                        t4 = *(DWORD*)0x1400097D9;
+                        t2 = 0;
+                        t3 = *(uintptr_t*)(rsi+0x0);
                         if (t3 == 1) {
                         }
                         if (rdi == 0) {
                         }
-                        t4 = [rax+0x0];
-                        if (t4 == 0) {
+                        t3 = *(DWORD*)0x140009729;
+                        t6 = *(uintptr_t*)(rax+0x0);
+                        if (t6 == 0) {
                         }
-                        t7 = rdi - 8;
-                        strlen();
-                        t11 = &[rax+0x1];
-                        [r12+0x0] = malloc();
-                        t12 = 0 + 8;
-                        memcpy();
-                        /* compare t7 vs t12 */
-                        strlen();
-                        t11 = &[rax+0x1];
-                        [r12+0x0] = malloc();
-                        t6 = rbx + 8;
-                        memcpy();
-                        /* compare rdi vs t6 */
-                        t7 = rdi + r12;
-                        [rdi+0x0] = 0;
+                        t2 = rdi - 8;
+                        t5 = *(uintptr_t*)(r13+0x0);
+                        strlen(*(uintptr_t*)(r13+0x0));
+                        t4 = &*(uintptr_t*)(rax+0x1);
+                        t8 = t4;
+                        malloc(rsi_0);
+                        t16 = t4;
+                        *(uintptr_t*)(r12+0x0) = rax;
+                        t7 = *(uintptr_t*)(r13+0x0);
+                        t10 = rax;
+                        t17 = 0 + 8;
+                        memcpy(rax, *(uintptr_t*)(r13+0x0), rsi_0);
+                        t5 = *(uintptr_t*)(r13+0x0);
+                        strlen(*(uintptr_t*)(r13+0x0));
+                        t4 = &*(uintptr_t*)(rax+0x1);
+                        t8 = t4;
+                        malloc(rsi_0);
+                        t16 = t4;
+                        *(uintptr_t*)(r12+0x0) = rax;
+                        t7 = *(uintptr_t*)(r13+0x0);
+                        t10 = rax;
+                        t11 = rbx + 8;
+                        memcpy(rax, *(uintptr_t*)(r13+0x0), rsi_0);
+                        t2 = rdi + r12;
+                        *(uintptr_t*)(rdi+0x0) = 0;
                         *(DWORD*)0x14000C019 = r12;
-                        __main();
-                        t13 = *(DWORD*)0x14000C011;
-                        t4 = [rax+0x0];
-                        [rax+0x0] = t13;
-                        main();
-                        t10 = *(DWORD*)0x14000C006;
-                        *(DWORD*)0x14000C00A = t4;
-                        /* compare t10 vs t10 */
+                        __main(*(DWORD*)0x14000C006);
+                        t3 = *(DWORD*)0x140009749;
+                        t16 = *(DWORD*)0x14000C011;
+                        t5 = *(DWORD*)0x14000C022;
+                        t6 = *(uintptr_t*)(rax+0x0);
+                        *(uintptr_t*)(rax+0x0) = t16;
+                        t7 = r12;
+                        main(*(DWORD*)0x14000C022, *(DWORD*)0x14000C019, *(DWORD*)0x14000C011);
+                        t8 = *(DWORD*)0x14000C006;
+                        *(DWORD*)0x14000C00A = t6;
                         do {
                             t3 = rdi;
-                            [rbx+0x0] = cmpxchg([rbx+0x0], rsi);
+                            *(uintptr_t*)(rbx+0x0) = cmpxchg(*(uintptr_t*)(rbx+0x0), rsi);
                             if (t3 != 0) {
                             }
-                            t3 = [rsi+0x0];
+                            t4 = *(DWORD*)0x1400097D9;
+                            t2 = 0;
+                            t3 = *(uintptr_t*)(rsi+0x0);
                             if (t3 == 1) {
                             }
                             if (rdi == 0) {
                             }
-                            t4 = [rax+0x0];
-                            if (t4 == 0) {
+                            t3 = *(DWORD*)0x140009729;
+                            t6 = *(uintptr_t*)(rax+0x0);
+                            if (t6 == 0) {
                             }
-                            t7 = rdi - 8;
-                            strlen();
-                            t11 = &[rax+0x1];
-                            [r12+0x0] = malloc();
-                            t12 = 0 + 8;
-                            memcpy();
-                            /* compare t7 vs t12 */
-                            strlen();
-                            t11 = &[rax+0x1];
-                            [r12+0x0] = malloc();
-                            t6 = rbx + 8;
-                            memcpy();
-                            /* compare rdi vs t6 */
-                            t7 = rdi + r12;
-                            [rdi+0x0] = 0;
+                            t2 = rdi - 8;
+                            t5 = *(uintptr_t*)(r13+0x0);
+                            strlen(*(uintptr_t*)(r13+0x0));
+                            t4 = &*(uintptr_t*)(rax+0x1);
+                            t8 = t4;
+                            malloc(rsi_0);
+                            t16 = t4;
+                            *(uintptr_t*)(r12+0x0) = rax;
+                            t7 = *(uintptr_t*)(r13+0x0);
+                            t10 = rax;
+                            t17 = 0 + 8;
+                            memcpy(rax, *(uintptr_t*)(r13+0x0), rsi_0);
+                            t5 = *(uintptr_t*)(r13+0x0);
+                            strlen(*(uintptr_t*)(r13+0x0));
+                            t4 = &*(uintptr_t*)(rax+0x1);
+                            t8 = t4;
+                            malloc(rsi_0);
+                            t16 = t4;
+                            *(uintptr_t*)(r12+0x0) = rax;
+                            t7 = *(uintptr_t*)(r13+0x0);
+                            t10 = rax;
+                            t11 = rbx + 8;
+                            memcpy(rax, *(uintptr_t*)(r13+0x0), rsi_0);
+                            t2 = rdi + r12;
+                            *(uintptr_t*)(rdi+0x0) = 0;
                             *(DWORD*)0x14000C019 = r12;
-                            __main();
-                            t13 = *(DWORD*)0x14000C011;
-                            t4 = [rax+0x0];
-                            [rax+0x0] = t13;
-                            main();
-                            t10 = *(DWORD*)0x14000C006;
-                            *(DWORD*)0x14000C00A = t4;
-                            /* compare t10 vs t10 */
+                            __main(*(DWORD*)0x14000C006);
+                            t3 = *(DWORD*)0x140009749;
+                            t16 = *(DWORD*)0x14000C011;
+                            t5 = *(DWORD*)0x14000C022;
+                            t6 = *(uintptr_t*)(rax+0x0);
+                            *(uintptr_t*)(rax+0x0) = t16;
+                            t7 = r12;
+                            main(*(DWORD*)0x14000C022, *(DWORD*)0x14000C019, *(DWORD*)0x14000C011);
+                            t8 = *(DWORD*)0x14000C006;
+                            *(DWORD*)0x14000C00A = t6;
                             do {
                                 t3 = rdi;
-                                [rbx+0x0] = cmpxchg([rbx+0x0], rsi);
+                                *(uintptr_t*)(rbx+0x0) = cmpxchg(*(uintptr_t*)(rbx+0x0), rsi);
                                 if (t3 != 0) {
                                 }
-                                t3 = [rsi+0x0];
+                                t4 = *(DWORD*)0x1400097D9;
+                                t2 = 0;
+                                t3 = *(uintptr_t*)(rsi+0x0);
                                 if (t3 == 1) {
                                 }
                                 if (rdi == 0) {
                                 }
-                                t4 = [rax+0x0];
-                                if (t4 == 0) {
+                                t3 = *(DWORD*)0x140009729;
+                                t6 = *(uintptr_t*)(rax+0x0);
+                                if (t6 == 0) {
                                 }
-                                t7 = rdi - 8;
-                                strlen();
-                                t11 = &[rax+0x1];
-                                [r12+0x0] = malloc();
-                                t12 = 0 + 8;
-                                memcpy();
-                                /* compare t7 vs t12 */
-                                strlen();
-                                t11 = &[rax+0x1];
-                                [r12+0x0] = malloc();
-                                t6 = rbx + 8;
-                                memcpy();
-                                /* compare rdi vs t6 */
-                                t7 = rdi + r12;
-                                [rdi+0x0] = 0;
+                                t2 = rdi - 8;
+                                t5 = *(uintptr_t*)(r13+0x0);
+                                strlen(*(uintptr_t*)(r13+0x0));
+                                t4 = &*(uintptr_t*)(rax+0x1);
+                                t8 = t4;
+                                malloc(rsi_0);
+                                t16 = t4;
+                                *(uintptr_t*)(r12+0x0) = rax;
+                                t7 = *(uintptr_t*)(r13+0x0);
+                                t10 = rax;
+                                t17 = 0 + 8;
+                                memcpy(rax, *(uintptr_t*)(r13+0x0), rsi_0);
+                                t5 = *(uintptr_t*)(r13+0x0);
+                                strlen(*(uintptr_t*)(r13+0x0));
+                                t4 = &*(uintptr_t*)(rax+0x1);
+                                t8 = t4;
+                                malloc(rsi_0);
+                                t16 = t4;
+                                *(uintptr_t*)(r12+0x0) = rax;
+                                t7 = *(uintptr_t*)(r13+0x0);
+                                t10 = rax;
+                                t11 = rbx + 8;
+                                memcpy(rax, *(uintptr_t*)(r13+0x0), rsi_0);
+                                t2 = rdi + r12;
+                                *(uintptr_t*)(rdi+0x0) = 0;
                                 *(DWORD*)0x14000C019 = r12;
-                                __main();
-                                t13 = *(DWORD*)0x14000C011;
-                                t4 = [rax+0x0];
-                                [rax+0x0] = t13;
-                                main();
-                                t10 = *(DWORD*)0x14000C006;
-                                *(DWORD*)0x14000C00A = t4;
-                                /* compare t10 vs t10 */
+                                __main(*(DWORD*)0x14000C006);
+                                t3 = *(DWORD*)0x140009749;
+                                t16 = *(DWORD*)0x14000C011;
+                                t5 = *(DWORD*)0x14000C022;
+                                t6 = *(uintptr_t*)(rax+0x0);
+                                *(uintptr_t*)(rax+0x0) = t16;
+                                t7 = r12;
+                                main(*(DWORD*)0x14000C022, *(DWORD*)0x14000C019, *(DWORD*)0x14000C011);
+                                t8 = *(DWORD*)0x14000C006;
+                                *(DWORD*)0x14000C00A = t6;
                                 do {
                                     t3 = rdi;
-                                    [rbx+0x0] = cmpxchg([rbx+0x0], rsi);
+                                    *(uintptr_t*)(rbx+0x0) = cmpxchg(*(uintptr_t*)(rbx+0x0), rsi);
                                     if (t3 != 0) {
                                     }
-                                    t3 = [rsi+0x0];
+                                    t4 = *(DWORD*)0x1400097D9;
+                                    t2 = 0;
+                                    t3 = *(uintptr_t*)(rsi+0x0);
                                     if (t3 == 1) {
                                     }
                                     if (rdi == 0) {
                                     }
-                                    t4 = [rax+0x0];
-                                    if (t4 == 0) {
+                                    t3 = *(DWORD*)0x140009729;
+                                    t6 = *(uintptr_t*)(rax+0x0);
+                                    if (t6 == 0) {
                                     }
-                                    t7 = rdi - 8;
-                                    strlen();
-                                    t11 = &[rax+0x1];
-                                    [r12+0x0] = malloc();
-                                    t12 = 0 + 8;
-                                    memcpy();
-                                    /* compare t7 vs t12 */
-                                    strlen();
-                                    t11 = &[rax+0x1];
-                                    [r12+0x0] = malloc();
-                                    t6 = rbx + 8;
-                                    memcpy();
-                                    /* compare rdi vs t6 */
-                                    t7 = rdi + r12;
-                                    [rdi+0x0] = 0;
+                                    t2 = rdi - 8;
+                                    t5 = *(uintptr_t*)(r13+0x0);
+                                    strlen(*(uintptr_t*)(r13+0x0));
+                                    t4 = &*(uintptr_t*)(rax+0x1);
+                                    t8 = t4;
+                                    malloc(rsi_0);
+                                    t16 = t4;
+                                    *(uintptr_t*)(r12+0x0) = rax;
+                                    t7 = *(uintptr_t*)(r13+0x0);
+                                    t10 = rax;
+                                    t17 = 0 + 8;
+                                    memcpy(rax, *(uintptr_t*)(r13+0x0), rsi_0);
+                                    t5 = *(uintptr_t*)(r13+0x0);
+                                    strlen(*(uintptr_t*)(r13+0x0));
+                                    t4 = &*(uintptr_t*)(rax+0x1);
+                                    t8 = t4;
+                                    malloc(rsi_0);
+                                    t16 = t4;
+                                    *(uintptr_t*)(r12+0x0) = rax;
+                                    t7 = *(uintptr_t*)(r13+0x0);
+                                    t10 = rax;
+                                    t11 = rbx + 8;
+                                    memcpy(rax, *(uintptr_t*)(r13+0x0), rsi_0);
+                                    t2 = rdi + r12;
+                                    *(uintptr_t*)(rdi+0x0) = 0;
                                     *(DWORD*)0x14000C019 = r12;
-                                    __main();
-                                    t13 = *(DWORD*)0x14000C011;
-                                    t4 = [rax+0x0];
-                                    [rax+0x0] = t13;
-                                    main();
-                                    t10 = *(DWORD*)0x14000C006;
-                                    *(DWORD*)0x14000C00A = t4;
-                                    /* compare t10 vs t10 */
+                                    __main(*(DWORD*)0x14000C006);
+                                    t3 = *(DWORD*)0x140009749;
+                                    t16 = *(DWORD*)0x14000C011;
+                                    t5 = *(DWORD*)0x14000C022;
+                                    t6 = *(uintptr_t*)(rax+0x0);
+                                    *(uintptr_t*)(rax+0x0) = t16;
+                                    t7 = r12;
+                                    main(*(DWORD*)0x14000C022, *(DWORD*)0x14000C019, *(DWORD*)0x14000C011);
+                                    t8 = *(DWORD*)0x14000C006;
+                                    *(DWORD*)0x14000C00A = t6;
                                     do {
                                         t3 = rdi;
-                                        [rbx+0x0] = cmpxchg([rbx+0x0], rsi);
+                                        *(uintptr_t*)(rbx+0x0) = cmpxchg(*(uintptr_t*)(rbx+0x0), rsi);
                                         if (t3 != 0) {
                                         }
-                                        t3 = [rsi+0x0];
+                                        t4 = *(DWORD*)0x1400097D9;
+                                        t2 = 0;
+                                        t3 = *(uintptr_t*)(rsi+0x0);
                                         if (t3 == 1) {
                                         }
                                         if (rdi == 0) {
                                         }
-                                        t4 = [rax+0x0];
-                                        if (t4 == 0) {
+                                        t3 = *(DWORD*)0x140009729;
+                                        t6 = *(uintptr_t*)(rax+0x0);
+                                        if (t6 == 0) {
                                         }
-                                        t7 = rdi - 8;
-                                        strlen();
-                                        t11 = &[rax+0x1];
-                                        [r12+0x0] = malloc();
-                                        t12 = 0 + 8;
-                                        memcpy();
-                                        /* compare t7 vs t12 */
-                                        strlen();
-                                        t11 = &[rax+0x1];
-                                        [r12+0x0] = malloc();
-                                        t6 = rbx + 8;
-                                        memcpy();
-                                        /* compare rdi vs t6 */
-                                        t7 = rdi + r12;
-                                        [rdi+0x0] = 0;
+                                        t2 = rdi - 8;
+                                        t5 = *(uintptr_t*)(r13+0x0);
+                                        strlen(*(uintptr_t*)(r13+0x0));
+                                        t4 = &*(uintptr_t*)(rax+0x1);
+                                        t8 = t4;
+                                        malloc(rsi_0);
+                                        t16 = t4;
+                                        *(uintptr_t*)(r12+0x0) = rax;
+                                        t7 = *(uintptr_t*)(r13+0x0);
+                                        t10 = rax;
+                                        t17 = 0 + 8;
+                                        memcpy(rax, *(uintptr_t*)(r13+0x0), rsi_0);
+                                        t5 = *(uintptr_t*)(r13+0x0);
+                                        strlen(*(uintptr_t*)(r13+0x0));
+                                        t4 = &*(uintptr_t*)(rax+0x1);
+                                        t8 = t4;
+                                        malloc(rsi_0);
+                                        t16 = t4;
+                                        *(uintptr_t*)(r12+0x0) = rax;
+                                        t7 = *(uintptr_t*)(r13+0x0);
+                                        t10 = rax;
+                                        t11 = rbx + 8;
+                                        memcpy(rax, *(uintptr_t*)(r13+0x0), rsi_0);
+                                        t2 = rdi + r12;
+                                        *(uintptr_t*)(rdi+0x0) = 0;
                                         *(DWORD*)0x14000C019 = r12;
-                                        __main();
-                                        t13 = *(DWORD*)0x14000C011;
-                                        t4 = [rax+0x0];
-                                        [rax+0x0] = t13;
-                                        main();
-                                        t10 = *(DWORD*)0x14000C006;
-                                        *(DWORD*)0x14000C00A = t4;
-                                        /* compare t10 vs t10 */
+                                        __main(*(DWORD*)0x14000C006);
+                                        t3 = *(DWORD*)0x140009749;
+                                        t16 = *(DWORD*)0x14000C011;
+                                        t5 = *(DWORD*)0x14000C022;
+                                        t6 = *(uintptr_t*)(rax+0x0);
+                                        *(uintptr_t*)(rax+0x0) = t16;
+                                        t7 = r12;
+                                        main(*(DWORD*)0x14000C022, *(DWORD*)0x14000C019, *(DWORD*)0x14000C011);
+                                        t8 = *(DWORD*)0x14000C006;
+                                        *(DWORD*)0x14000C00A = t6;
                                         do {
                                             t3 = rdi;
-                                            [rbx+0x0] = cmpxchg([rbx+0x0], rsi);
+                                            *(uintptr_t*)(rbx+0x0) = cmpxchg(*(uintptr_t*)(rbx+0x0), rsi);
                                             if (t3 != 0) {
                                             }
-                                            t3 = [rsi+0x0];
+                                            t4 = *(DWORD*)0x1400097D9;
+                                            t2 = 0;
+                                            t3 = *(uintptr_t*)(rsi+0x0);
                                             if (t3 == 1) {
                                             }
                                             if (rdi == 0) {
                                             }
-                                            t4 = [rax+0x0];
-                                            if (t4 == 0) {
+                                            t3 = *(DWORD*)0x140009729;
+                                            t6 = *(uintptr_t*)(rax+0x0);
+                                            if (t6 == 0) {
                                             }
-                                            t7 = rdi - 8;
-                                            strlen();
-                                            t11 = &[rax+0x1];
-                                            [r12+0x0] = malloc();
-                                            t12 = 0 + 8;
-                                            memcpy();
-                                            /* compare t7 vs t12 */
-                                            strlen();
-                                            t11 = &[rax+0x1];
-                                            [r12+0x0] = malloc();
-                                            t6 = rbx + 8;
-                                            memcpy();
-                                            /* compare rdi vs t6 */
-                                            t7 = rdi + r12;
-                                            [rdi+0x0] = 0;
+                                            t2 = rdi - 8;
+                                            t5 = *(uintptr_t*)(r13+0x0);
+                                            strlen(*(uintptr_t*)(r13+0x0));
+                                            t4 = &*(uintptr_t*)(rax+0x1);
+                                            t8 = t4;
+                                            malloc(rsi_0);
+                                            t16 = t4;
+                                            *(uintptr_t*)(r12+0x0) = rax;
+                                            t7 = *(uintptr_t*)(r13+0x0);
+                                            t10 = rax;
+                                            t17 = 0 + 8;
+                                            memcpy(rax, *(uintptr_t*)(r13+0x0), rsi_0);
+                                            t5 = *(uintptr_t*)(r13+0x0);
+                                            strlen(*(uintptr_t*)(r13+0x0));
+                                            t4 = &*(uintptr_t*)(rax+0x1);
+                                            t8 = t4;
+                                            malloc(rsi_0);
+                                            t16 = t4;
+                                            *(uintptr_t*)(r12+0x0) = rax;
+                                            t7 = *(uintptr_t*)(r13+0x0);
+                                            t10 = rax;
+                                            t11 = rbx + 8;
+                                            memcpy(rax, *(uintptr_t*)(r13+0x0), rsi_0);
+                                            t2 = rdi + r12;
+                                            *(uintptr_t*)(rdi+0x0) = 0;
                                             *(DWORD*)0x14000C019 = r12;
-                                            __main();
-                                            t13 = *(DWORD*)0x14000C011;
-                                            t4 = [rax+0x0];
-                                            [rax+0x0] = t13;
-                                            main();
-                                            t10 = *(DWORD*)0x14000C006;
-                                            *(DWORD*)0x14000C00A = t4;
-                                            /* compare t10 vs t10 */
+                                            __main(*(DWORD*)0x14000C006);
+                                            t3 = *(DWORD*)0x140009749;
+                                            t16 = *(DWORD*)0x14000C011;
+                                            t5 = *(DWORD*)0x14000C022;
+                                            t6 = *(uintptr_t*)(rax+0x0);
+                                            *(uintptr_t*)(rax+0x0) = t16;
+                                            t7 = r12;
+                                            main(*(DWORD*)0x14000C022, *(DWORD*)0x14000C019, *(DWORD*)0x14000C011);
+                                            t8 = *(DWORD*)0x14000C006;
+                                            *(DWORD*)0x14000C00A = t6;
                                             do {
                                                 t3 = rdi;
-                                                [rbx+0x0] = cmpxchg([rbx+0x0], rsi);
+                                                *(uintptr_t*)(rbx+0x0) = cmpxchg(*(uintptr_t*)(rbx+0x0), rsi);
                                                 if (t3 != 0) {
                                                 }
-                                                t3 = [rsi+0x0];
+                                                t4 = *(DWORD*)0x1400097D9;
+                                                t2 = 0;
+                                                t3 = *(uintptr_t*)(rsi+0x0);
                                                 if (t3 == 1) {
                                                 }
                                                 if (rdi == 0) {
                                                 }
-                                                t4 = [rax+0x0];
-                                                if (t4 == 0) {
+                                                t3 = *(DWORD*)0x140009729;
+                                                t6 = *(uintptr_t*)(rax+0x0);
+                                                if (t6 == 0) {
                                                 }
-                                                t7 = rdi - 8;
-                                                strlen();
-                                                t11 = &[rax+0x1];
-                                                [r12+0x0] = malloc();
-                                                t12 = 0 + 8;
-                                                memcpy();
-                                                /* compare t7 vs t12 */
-                                                strlen();
-                                                t11 = &[rax+0x1];
-                                                [r12+0x0] = malloc();
-                                                t6 = rbx + 8;
-                                                memcpy();
-                                                /* compare rdi vs t6 */
-                                                t7 = rdi + r12;
-                                                [rdi+0x0] = 0;
+                                                t2 = rdi - 8;
+                                                t5 = *(uintptr_t*)(r13+0x0);
+                                                strlen(*(uintptr_t*)(r13+0x0));
+                                                t4 = &*(uintptr_t*)(rax+0x1);
+                                                t8 = t4;
+                                                malloc(rsi_0);
+                                                t16 = t4;
+                                                *(uintptr_t*)(r12+0x0) = rax;
+                                                t7 = *(uintptr_t*)(r13+0x0);
+                                                t10 = rax;
+                                                t17 = 0 + 8;
+                                                memcpy(rax, *(uintptr_t*)(r13+0x0), rsi_0);
+                                                t5 = *(uintptr_t*)(r13+0x0);
+                                                strlen(*(uintptr_t*)(r13+0x0));
+                                                t4 = &*(uintptr_t*)(rax+0x1);
+                                                t8 = t4;
+                                                malloc(rsi_0);
+                                                t16 = t4;
+                                                *(uintptr_t*)(r12+0x0) = rax;
+                                                t7 = *(uintptr_t*)(r13+0x0);
+                                                t10 = rax;
+                                                t11 = rbx + 8;
+                                                memcpy(rax, *(uintptr_t*)(r13+0x0), rsi_0);
+                                                t2 = rdi + r12;
+                                                *(uintptr_t*)(rdi+0x0) = 0;
                                                 *(DWORD*)0x14000C019 = r12;
-                                                __main();
-                                                t13 = *(DWORD*)0x14000C011;
-                                                t4 = [rax+0x0];
-                                                [rax+0x0] = t13;
-                                                main();
-                                                t10 = *(DWORD*)0x14000C006;
-                                                *(DWORD*)0x14000C00A = t4;
-                                                /* compare t10 vs t10 */
+                                                __main(*(DWORD*)0x14000C006);
+                                                t3 = *(DWORD*)0x140009749;
+                                                t16 = *(DWORD*)0x14000C011;
+                                                t5 = *(DWORD*)0x14000C022;
+                                                t6 = *(uintptr_t*)(rax+0x0);
+                                                *(uintptr_t*)(rax+0x0) = t16;
+                                                t7 = r12;
+                                                main(*(DWORD*)0x14000C022, *(DWORD*)0x14000C019, *(DWORD*)0x14000C011);
+                                                t8 = *(DWORD*)0x14000C006;
+                                                *(DWORD*)0x14000C00A = t6;
                                                 do {
                                                     t3 = rdi;
-                                                    [rbx+0x0] = cmpxchg([rbx+0x0], rsi);
-                                                    /* compare t3 vs t3 */
-                                                    /* compare rsi vs rax */
-                                                    t3 = [rsi+0x0];
-                                                    /* compare t3 vs 1 */
-                                                    /* compare rsi vs rax */
-                                                    t3 = [rsi+0x0];
-                                                    /* compare t3 vs 1 */
-                                                    r12();
+                                                    *(uintptr_t*)(rbx+0x0) = cmpxchg(*(uintptr_t*)(rbx+0x0), rsi);
+                                                    t4 = *(DWORD*)0x1400097D9;
+                                                    t2 = 0;
+                                                    t3 = *(uintptr_t*)(rsi+0x0);
+                                                    t4 = *(DWORD*)0x1400097D9;
+                                                    t2 = 1;
+                                                    t3 = *(uintptr_t*)(rsi+0x0);
+                                                    t5 = 1000;
+                                                    r12(1000);
                                                     t3 = rdi;
-                                                    [rbx+0x0] = cmpxchg([rbx+0x0], rsi);
-                                                    /* compare t3 vs t3 */
-                                                    r12();
+                                                    *(uintptr_t*)(rbx+0x0) = cmpxchg(*(uintptr_t*)(rbx+0x0), rsi);
+                                                    t5 = 1000;
+                                                    r12(1000);
                                                     t3 = rdi;
-                                                    [rbx+0x0] = cmpxchg([rbx+0x0], rsi);
-                                                    /* compare t3 vs t3 */
-                                                    t3 = [rsi+0x0];
-                                                    /* compare t3 vs 1 */
-                                                    _amsg_exit();
-                                                    t3 = [rsi+0x0];
-                                                    /* compare t3 vs 1 */
-                                                    t3 = [rsi+0x0];
-                                                    /* compare t3 vs t3 */
-                                                    t3 = [rsi+0x0];
-                                                    /* compare t3 vs 1 */
-                                                    t3 = [rsi+0x0];
-                                                    /* compare t3 vs t3 */
-                                                    _amsg_exit();
-                                                    t3 = [rsi+0x0];
-                                                    /* compare t3 vs 1 */
-                                                    _amsg_exit();
-                                                    t3 = [rsi+0x0];
-                                                    /* compare t3 vs 1 */
-                                                    /* compare rdi vs rdi */
-                                                    _initterm();
-                                                    [rsi+0x0] = 2;
-                                                    /* compare rdi vs rdi */
-                                                    t3 = [rsi+0x0];
-                                                    /* compare t3 vs t3 */
-                                                    [rsi+0x0] = 1;
-                                                    _initterm();
+                                                    *(uintptr_t*)(rbx+0x0) = cmpxchg(*(uintptr_t*)(rbx+0x0), rsi);
+                                                    t4 = *(DWORD*)0x1400097D9;
+                                                    t2 = 0;
+                                                    t3 = *(uintptr_t*)(rsi+0x0);
+                                                    t5 = 31;
+                                                    _amsg_exit(31);
+                                                    t3 = *(uintptr_t*)(rsi+0x0);
+                                                    t3 = *(uintptr_t*)(rsi+0x0);
+                                                    t4 = *(DWORD*)0x1400097D9;
+                                                    t2 = 1;
+                                                    t3 = *(uintptr_t*)(rsi+0x0);
+                                                    t3 = *(uintptr_t*)(rsi+0x0);
+                                                    t5 = 31;
+                                                    _amsg_exit(31);
+                                                    t3 = *(uintptr_t*)(rsi+0x0);
+                                                    t5 = 31;
+                                                    _amsg_exit(31);
+                                                    t3 = *(uintptr_t*)(rsi+0x0);
+                                                    t7 = *(DWORD*)0x140009809;
+                                                    t5 = *(DWORD*)0x1400097F9;
+                                                    _initterm(*(DWORD*)0x1400097F9, *(DWORD*)0x140009809);
+                                                    *(uintptr_t*)(rsi+0x0) = 2;
+                                                    t3 = *(uintptr_t*)(rsi+0x0);
+                                                    t7 = *(DWORD*)0x140009829;
+                                                    t5 = *(DWORD*)0x140009819;
+                                                    *(uintptr_t*)(rsi+0x0) = 1;
+                                                    _initterm(*(DWORD*)0x140009819, *(DWORD*)0x140009829);
                                                     *(DWORD*)0x14000BFFE = 1;
-                                                    t3 = [rsi+0x0];
-                                                    /* compare t3 vs 1 */
+                                                    t3 = *(uintptr_t*)(rsi+0x0);
                                                     *(DWORD*)0x14000BFFE = 1;
-                                                    t3 = [rsi+0x0];
-                                                    /* compare t3 vs 1 */
-                                                    _initterm();
-                                                    [rsi+0x0] = 2;
-                                                    /* compare rdi vs rdi */
-                                                    /* compare rdi vs rdi */
-                                                    [rsi+0x0] = 1;
-                                                    _initterm();
-                                                    t3 = [rsi+0x0];
-                                                    /* compare t3 vs 1 */
-                                                    t3 = [rsi+0x0];
-                                                    /* compare t3 vs 1 */
-                                                    _initterm();
-                                                    [rsi+0x0] = 2;
-                                                    /* compare rdi vs rdi */
-                                                    /* compare rdi vs rdi */
-                                                    /* compare rdi vs rdi */
-                                                    [rbx+0x0] = xchg([rbx+0x0], rax);
-                                                    t4 = [rax+0x0];
-                                                    /* compare t4 vs t4 */
-                                                    _initterm();
-                                                    [rsi+0x0] = 2;
-                                                    /* compare rdi vs rdi */
-                                                    t4 = [rax+0x0];
-                                                    /* compare t4 vs t4 */
-                                                    [rbx+0x0] = xchg([rbx+0x0], rax);
-                                                    [rbx+0x0] = xchg([rbx+0x0], rax);
-                                                    t4 = [rax+0x0];
-                                                    /* compare t4 vs t4 */
-                                                    _pei386_runtime_relocator();
-                                                    ___FARPROC__gvar_14000D1FA_();
+                                                    t3 = *(uintptr_t*)(rsi+0x0);
+                                                    t7 = *(DWORD*)0x140009809;
+                                                    t5 = *(DWORD*)0x1400097F9;
+                                                    _initterm(*(DWORD*)0x1400097F9, *(DWORD*)0x140009809);
+                                                    *(uintptr_t*)(rsi+0x0) = 2;
+                                                    t7 = *(DWORD*)0x140009829;
+                                                    t5 = *(DWORD*)0x140009819;
+                                                    *(uintptr_t*)(rsi+0x0) = 1;
+                                                    _initterm(*(DWORD*)0x140009819, *(DWORD*)0x140009829);
+                                                    t3 = *(uintptr_t*)(rsi+0x0);
+                                                    t3 = *(uintptr_t*)(rsi+0x0);
+                                                    t7 = *(DWORD*)0x140009809;
+                                                    t5 = *(DWORD*)0x1400097F9;
+                                                    _initterm(*(DWORD*)0x1400097F9, *(DWORD*)0x140009809);
+                                                    *(uintptr_t*)(rsi+0x0) = 2;
+                                                    t3 = 0;
+                                                    *(uintptr_t*)(rbx+0x0) = xchg(*(uintptr_t*)(rbx+0x0), rax);
+                                                    t3 = *(DWORD*)0x140009729;
+                                                    t6 = *(uintptr_t*)(rax+0x0);
+                                                    t7 = *(DWORD*)0x140009809;
+                                                    t5 = *(DWORD*)0x1400097F9;
+                                                    _initterm(*(DWORD*)0x1400097F9, *(DWORD*)0x140009809);
+                                                    *(uintptr_t*)(rsi+0x0) = 2;
+                                                    t3 = *(DWORD*)0x140009729;
+                                                    t6 = *(uintptr_t*)(rax+0x0);
+                                                    t3 = 0;
+                                                    *(uintptr_t*)(rbx+0x0) = xchg(*(uintptr_t*)(rbx+0x0), rax);
+                                                    t3 = 0;
+                                                    *(uintptr_t*)(rbx+0x0) = xchg(*(uintptr_t*)(rbx+0x0), rax);
+                                                    t3 = *(DWORD*)0x140009729;
+                                                    t6 = *(uintptr_t*)(rax+0x0);
+                                                    _pei386_runtime_relocator(*(DWORD*)0x14000C006);
+                                                    t5 = *(DWORD*)0x140009869;
+                                                    ___FARPROC__gvar_14000D1FA_(*(DWORD*)0x140009869);
+                                                    t7 = *(DWORD*)0x1400097B9;
+                                                    t8 = &*(DWORD*)0x140000FF9;
+                                                    *(uintptr_t*)(rdx+0x0) = rax;
+                                                    mingw_set_invalid_parameter_handler(*(DWORD*)0x140000FF9, rax);
+                                                    _fpreset(*(DWORD*)0x14000C006);
+                                                    t11 = *(DWORD*)0x14000C022;
+                                                    t2 = &*(uintptr_t*)(rbx+0x1);
+                                                    t12 = (signed)t2;
+                                                    t13 = t12 << 0x3;
+                                                    t10 = t13;
+                                                    malloc(rdi_2);
+                                                    t7 = 2;
+                                                    t5 = 0;
+                                                    rax(0, 2);
+                                                    _pei386_runtime_relocator(*(DWORD*)0x14000C006);
+                                                    t8 = *(DWORD*)0x140009869;
+                                                    ___FARPROC__gvar_14000D1FA_(*(DWORD*)0x140009869);
+                                                    t9 = *(DWORD*)0x1400097B9;
                                                     t10 = &*(DWORD*)0x140000FF9;
-                                                    [rdx+0x0] = rax;
-                                                    mingw_set_invalid_parameter_handler();
-                                                    _fpreset();
-                                                    t6 = *(DWORD*)0x14000C022;
-                                                    t7 = &[rbx+0x1];
-                                                    t8 = (signed)t7;
-                                                    t9 = t8 << 0x3;
-                                                    malloc();
-                                                    /* compare t6 vs t6 */
-                                                    rax();
-                                                    _pei386_runtime_relocator();
-                                                    ___FARPROC__gvar_14000D1FA_();
-                                                    t5 = &*(DWORD*)0x140000FF9;
-                                                    [rdx+0x0] = rax;
-                                                    mingw_set_invalid_parameter_handler();
-                                                    _fpreset();
-                                                    t6 = *(DWORD*)0x14000C022;
-                                                    t7 = &[rbx+0x1];
-                                                    t8 = (signed)t7;
-                                                    t9 = t8 << 0x3;
-                                                    malloc();
-                                                    /* compare t6 vs t6 */
-                                                    rax();
-                                                    _pei386_runtime_relocator();
-                                                    ___FARPROC__gvar_14000D1FA_();
-                                                    t5 = &*(DWORD*)0x140000FF9;
-                                                    [rdx+0x0] = rax;
-                                                    mingw_set_invalid_parameter_handler();
-                                                    _fpreset();
-                                                    t6 = *(DWORD*)0x14000C022;
-                                                    t7 = &[rbx+0x1];
-                                                    t8 = (signed)t7;
-                                                    t9 = t8 << 0x3;
-                                                    malloc();
-                                                    /* compare t6 vs t6 */
-                                                    t7 = rdi - 8;
-                                                    strlen();
-                                                    t11 = &[rax+0x1];
-                                                    [r12+0x0] = malloc();
-                                                    t12 = 0 + 8;
-                                                    memcpy();
-                                                    /* compare t7 vs t12 */
-                                                    _pei386_runtime_relocator();
-                                                    ___FARPROC__gvar_14000D1FA_();
+                                                    *(uintptr_t*)(rdx+0x0) = rax;
+                                                    mingw_set_invalid_parameter_handler(*(DWORD*)0x140000FF9, rax);
+                                                    _fpreset(*(DWORD*)0x14000C006);
+                                                    t11 = *(DWORD*)0x14000C022;
+                                                    t2 = &*(uintptr_t*)(rbx+0x1);
+                                                    t12 = (signed)t2;
+                                                    t13 = t12 << 0x3;
+                                                    t14 = t13;
+                                                    malloc(rdi_2);
+                                                    t7 = 2;
+                                                    t5 = 0;
+                                                    rax(0, 2);
+                                                    _pei386_runtime_relocator(*(DWORD*)0x14000C006);
+                                                    t8 = *(DWORD*)0x140009869;
+                                                    ___FARPROC__gvar_14000D1FA_(*(DWORD*)0x140009869);
+                                                    t9 = *(DWORD*)0x1400097B9;
                                                     t10 = &*(DWORD*)0x140000FF9;
-                                                    [rdx+0x0] = rax;
-                                                    mingw_set_invalid_parameter_handler();
-                                                    _fpreset();
-                                                    t6 = *(DWORD*)0x14000C022;
-                                                    t7 = &[rbx+0x1];
-                                                    t8 = (signed)t7;
-                                                    t9 = t8 << 0x3;
-                                                    malloc();
-                                                    /* compare t6 vs t6 */
-                                                    t7 = rdi - 8;
-                                                    strlen();
-                                                    t11 = &[rax+0x1];
-                                                    [r12+0x0] = malloc();
-                                                    t12 = 0 + 8;
-                                                    memcpy();
-                                                    /* compare t7 vs t12 */
-                                                    t7 = rdi - 8;
-                                                    strlen();
-                                                    t11 = &[rax+0x1];
-                                                    [r12+0x0] = malloc();
-                                                    t12 = 0 + 8;
-                                                    memcpy();
-                                                    /* compare t7 vs t12 */
-                                                    strlen();
-                                                    t11 = &[rax+0x1];
-                                                    [r12+0x0] = malloc();
-                                                    t6 = rbx + 8;
-                                                    memcpy();
-                                                    /* compare rdi vs t6 */
-                                                    t7 = rdi + r12;
-                                                    [rdi+0x0] = 0;
+                                                    *(uintptr_t*)(rdx+0x0) = rax;
+                                                    mingw_set_invalid_parameter_handler(*(DWORD*)0x140000FF9, rax);
+                                                    _fpreset(*(DWORD*)0x14000C006);
+                                                    t11 = *(DWORD*)0x14000C022;
+                                                    t2 = &*(uintptr_t*)(rbx+0x1);
+                                                    t12 = (signed)t2;
+                                                    t13 = t12 << 0x3;
+                                                    t14 = t13;
+                                                    malloc(rdi_2);
+                                                    t2 = rax;
+                                                    t2 = rdi - 8;
+                                                    t5 = *(uintptr_t*)(r13+0x0);
+                                                    strlen(*(uintptr_t*)(r13+0x0));
+                                                    t4 = &*(uintptr_t*)(rax+0x1);
+                                                    t8 = t4;
+                                                    malloc(rsi_0);
+                                                    t16 = t4;
+                                                    *(uintptr_t*)(r12+0x0) = rax;
+                                                    t7 = *(uintptr_t*)(r13+0x0);
+                                                    t10 = rax;
+                                                    t17 = 0 + 8;
+                                                    memcpy(rax, *(uintptr_t*)(r13+0x0), rsi_0);
+                                                    _pei386_runtime_relocator(*(DWORD*)0x14000C006);
+                                                    t5 = *(DWORD*)0x140009869;
+                                                    ___FARPROC__gvar_14000D1FA_(*(DWORD*)0x140009869);
+                                                    t7 = *(DWORD*)0x1400097B9;
+                                                    t8 = &*(DWORD*)0x140000FF9;
+                                                    *(uintptr_t*)(rdx+0x0) = rax;
+                                                    mingw_set_invalid_parameter_handler(*(DWORD*)0x140000FF9, rax);
+                                                    _fpreset(*(DWORD*)0x14000C006);
+                                                    t11 = *(DWORD*)0x14000C022;
+                                                    t2 = &*(uintptr_t*)(rbx+0x1);
+                                                    t12 = (signed)t2;
+                                                    t13 = t12 << 0x3;
+                                                    t10 = t13;
+                                                    malloc(rdi_2);
+                                                    t2 = rax;
+                                                    t2 = rdi - 8;
+                                                    t5 = *(uintptr_t*)(r13+0x0);
+                                                    strlen(*(uintptr_t*)(r13+0x0));
+                                                    t4 = &*(uintptr_t*)(rax+0x1);
+                                                    t8 = t4;
+                                                    malloc(rsi_0);
+                                                    t16 = t4;
+                                                    *(uintptr_t*)(r12+0x0) = rax;
+                                                    t7 = *(uintptr_t*)(r13+0x0);
+                                                    t10 = rax;
+                                                    t17 = 0 + 8;
+                                                    memcpy(rax, *(uintptr_t*)(r13+0x0), rsi_0);
+                                                    t2 = rdi - 8;
+                                                    t5 = *(uintptr_t*)(r13+0x0);
+                                                    strlen(*(uintptr_t*)(r13+0x0));
+                                                    t4 = &*(uintptr_t*)(rax+0x1);
+                                                    t8 = t4;
+                                                    malloc(rsi_0);
+                                                    t16 = t4;
+                                                    *(uintptr_t*)(r12+0x0) = rax;
+                                                    t7 = *(uintptr_t*)(r13+0x0);
+                                                    t10 = rax;
+                                                    t17 = 0 + 8;
+                                                    memcpy(rax, *(uintptr_t*)(r13+0x0), rsi_0);
+                                                    t5 = *(uintptr_t*)(r13+0x0);
+                                                    strlen(*(uintptr_t*)(r13+0x0));
+                                                    t4 = &*(uintptr_t*)(rax+0x1);
+                                                    t8 = t4;
+                                                    malloc(rsi_0);
+                                                    t16 = t4;
+                                                    *(uintptr_t*)(r12+0x0) = rax;
+                                                    t7 = *(uintptr_t*)(r13+0x0);
+                                                    t10 = rax;
+                                                    t11 = rbx + 8;
+                                                    memcpy(rax, *(uintptr_t*)(r13+0x0), rsi_0);
+                                                    t2 = rdi + r12;
+                                                    *(uintptr_t*)(rdi+0x0) = 0;
                                                     *(DWORD*)0x14000C019 = r12;
-                                                    __main();
-                                                    t13 = *(DWORD*)0x14000C011;
-                                                    t4 = [rax+0x0];
-                                                    [rax+0x0] = t13;
-                                                    main();
-                                                    t10 = *(DWORD*)0x14000C006;
-                                                    *(DWORD*)0x14000C00A = t4;
-                                                    /* compare t10 vs t10 */
-                                                    strlen();
-                                                    t11 = &[rax+0x1];
-                                                    [r12+0x0] = malloc();
-                                                    t6 = rbx + 8;
-                                                    memcpy();
-                                                    /* compare rdi vs t6 */
-                                                    strlen();
-                                                    t11 = &[rax+0x1];
-                                                    [r12+0x0] = malloc();
-                                                    t6 = rbx + 8;
-                                                    memcpy();
-                                                    /* compare rdi vs t6 */
-                                                    t7 = rdi + r12;
-                                                    [rdi+0x0] = 0;
+                                                    __main(*(DWORD*)0x14000C006);
+                                                    t3 = *(DWORD*)0x140009749;
+                                                    t16 = *(DWORD*)0x14000C011;
+                                                    t5 = *(DWORD*)0x14000C022;
+                                                    t6 = *(uintptr_t*)(rax+0x0);
+                                                    *(uintptr_t*)(rax+0x0) = t16;
+                                                    t7 = r12;
+                                                    main(*(DWORD*)0x14000C022, *(DWORD*)0x14000C019, *(DWORD*)0x14000C011);
+                                                    t8 = *(DWORD*)0x14000C006;
+                                                    *(DWORD*)0x14000C00A = t6;
+                                                    t5 = *(uintptr_t*)(r13+0x0);
+                                                    strlen(*(uintptr_t*)(r13+0x0));
+                                                    t4 = &*(uintptr_t*)(rax+0x1);
+                                                    t8 = t4;
+                                                    malloc(rsi_0);
+                                                    t16 = t4;
+                                                    *(uintptr_t*)(r12+0x0) = rax;
+                                                    t7 = *(uintptr_t*)(r13+0x0);
+                                                    t10 = rax;
+                                                    t11 = rbx + 8;
+                                                    memcpy(rax, *(uintptr_t*)(r13+0x0), rsi_0);
+                                                    t5 = *(uintptr_t*)(r13+0x0);
+                                                    strlen(*(uintptr_t*)(r13+0x0));
+                                                    t4 = &*(uintptr_t*)(rax+0x1);
+                                                    t8 = t4;
+                                                    malloc(rsi_0);
+                                                    t16 = t4;
+                                                    *(uintptr_t*)(r12+0x0) = rax;
+                                                    t7 = *(uintptr_t*)(r13+0x0);
+                                                    t10 = rax;
+                                                    t11 = rbx + 8;
+                                                    memcpy(rax, *(uintptr_t*)(r13+0x0), rsi_0);
+                                                    t2 = rdi + r12;
+                                                    *(uintptr_t*)(rdi+0x0) = 0;
                                                     *(DWORD*)0x14000C019 = r12;
-                                                    __main();
-                                                    t13 = *(DWORD*)0x14000C011;
-                                                    t4 = [rax+0x0];
-                                                    [rax+0x0] = t13;
-                                                    main();
-                                                    t10 = *(DWORD*)0x14000C006;
-                                                    *(DWORD*)0x14000C00A = t4;
-                                                    /* compare t10 vs t10 */
-                                                    t7 = rdi + r12;
-                                                    [rdi+0x0] = 0;
+                                                    __main(*(DWORD*)0x14000C006);
+                                                    t3 = *(DWORD*)0x140009749;
+                                                    t16 = *(DWORD*)0x14000C011;
+                                                    t5 = *(DWORD*)0x14000C022;
+                                                    t6 = *(uintptr_t*)(rax+0x0);
+                                                    *(uintptr_t*)(rax+0x0) = t16;
+                                                    t7 = r12;
+                                                    main(*(DWORD*)0x14000C022, *(DWORD*)0x14000C019, *(DWORD*)0x14000C011);
+                                                    t8 = *(DWORD*)0x14000C006;
+                                                    *(DWORD*)0x14000C00A = t6;
+                                                    t2 = rdi + r12;
+                                                    *(uintptr_t*)(rdi+0x0) = 0;
                                                     *(DWORD*)0x14000C019 = r12;
-                                                    __main();
-                                                    t13 = *(DWORD*)0x14000C011;
-                                                    t4 = [rax+0x0];
-                                                    [rax+0x0] = t13;
-                                                    main();
-                                                    t10 = *(DWORD*)0x14000C006;
-                                                    *(DWORD*)0x14000C00A = t4;
-                                                    /* compare t10 vs t10 */
-                                                    exit();
-                                                    t1 = rsp - 32;
-                                                    [rax+0x0] = 1;
-                                                    __tmainCRTStartup();
-                                                    t17 = t1 + 32;
+                                                    __main(*(DWORD*)0x14000C006);
+                                                    t3 = *(DWORD*)0x140009749;
+                                                    t16 = *(DWORD*)0x14000C011;
+                                                    t5 = *(DWORD*)0x14000C022;
+                                                    t6 = *(uintptr_t*)(rax+0x0);
+                                                    *(uintptr_t*)(rax+0x0) = t16;
+                                                    t7 = r12;
+                                                    main(*(DWORD*)0x14000C022, *(DWORD*)0x14000C019, *(DWORD*)0x14000C011);
+                                                    t8 = *(DWORD*)0x14000C006;
+                                                    *(DWORD*)0x14000C00A = t6;
+                                                    t5 = rax;
+                                                    exit(rax);
+                                                    t3 = *(DWORD*)0x140009779;
+                                                    *(uintptr_t*)(rax+0x0) = 1;
+                                                    __tmainCRTStartup(*(DWORD*)0x14000C006);
+                                                    t20 = stack_pop();
+                                                    t7 = *(DWORD*)0x14000C002;
+                                                    t2 = rax;
+                                                    *(uintptr_t*)(rdi+0x0) = 0;
+                                                    *(DWORD*)0x14000C019 = r12;
+                                                    __main(*(DWORD*)0x14000C006);
+                                                    t3 = *(DWORD*)0x140009749;
+                                                    t16 = *(DWORD*)0x14000C011;
+                                                    t5 = *(DWORD*)0x14000C022;
+                                                    t6 = *(uintptr_t*)(rax+0x0);
+                                                    *(uintptr_t*)(rax+0x0) = t16;
+                                                    t7 = r12;
+                                                    main(*(DWORD*)0x14000C022, *(DWORD*)0x14000C019, *(DWORD*)0x14000C011);
+                                                    t8 = *(DWORD*)0x14000C006;
+                                                    *(DWORD*)0x14000C00A = t6;
+                                                    t5 = rax;
+                                                    exit(rax);
+                                                    t3 = *(DWORD*)0x140009779;
+                                                    *(uintptr_t*)(rax+0x0) = 1;
+                                                    __tmainCRTStartup(*(DWORD*)0x14000C006);
+                                                    t20 = stack_pop();
+                                                    t7 = *(DWORD*)0x14000C002;
+                                                    t7 = *(DWORD*)0x14000C002;
+                                                    _cexit(*(DWORD*)0x14000C006, *(DWORD*)0x14000C002);
+                                                    t3 = t6;
+                                                    t11 = stack_pop();
+                                                    t4 = stack_pop();
+                                                    t2 = stack_pop();
                                                     t18 = stack_pop();
-                                                    t14 = *(DWORD*)0x14000C002;
-                                                    /* compare t14 vs t14 */
-                                                    [rdi+0x0] = 0;
-                                                    *(DWORD*)0x14000C019 = r12;
-                                                    __main();
-                                                    t13 = *(DWORD*)0x14000C011;
-                                                    t4 = [rax+0x0];
-                                                    [rax+0x0] = t13;
-                                                    main();
-                                                    t10 = *(DWORD*)0x14000C006;
-                                                    *(DWORD*)0x14000C00A = t4;
-                                                    /* compare t10 vs t10 */
-                                                    exit();
-                                                    t1 = rsp - 32;
-                                                    [rax+0x0] = 1;
-                                                    __tmainCRTStartup();
-                                                    t17 = t1 + 32;
+                                                    t19 = stack_pop();
+                                                    t11 = stack_pop();
+                                                    t4 = stack_pop();
+                                                    t2 = stack_pop();
                                                     t18 = stack_pop();
-                                                    t14 = *(DWORD*)0x14000C002;
-                                                    /* compare t14 vs t14 */
-                                                    t14 = *(DWORD*)0x14000C002;
-                                                    /* compare t14 vs t14 */
-                                                    _cexit();
-                                                    t1 = rsp + 40;
-                                                    t6 = stack_pop();
+                                                    t19 = stack_pop();
                                                     t11 = stack_pop();
-                                                    t7 = stack_pop();
-                                                    t15 = stack_pop();
-                                                    t16 = stack_pop();
+                                                    t4 = stack_pop();
                                                     t2 = stack_pop();
-                                                    t1 = rsp + 40;
-                                                    t6 = stack_pop();
-                                                    t11 = stack_pop();
-                                                    t7 = stack_pop();
-                                                    t15 = stack_pop();
-                                                    t16 = stack_pop();
-                                                    t2 = stack_pop();
-                                                    t1 = rsp + 40;
-                                                    t6 = stack_pop();
-                                                    t11 = stack_pop();
-                                                    t7 = stack_pop();
-                                                    t15 = stack_pop();
-                                                    t16 = stack_pop();
-                                                    t2 = stack_pop();
-                                                    _cexit();
-                                                    t1 = rsp + 40;
-                                                    t6 = stack_pop();
-                                                    t11 = stack_pop();
-                                                    t7 = stack_pop();
-                                                    t15 = stack_pop();
-                                                    t16 = stack_pop();
-                                                    t2 = stack_pop();
-                                                    exit();
-                                                    t1 = rsp - 32;
-                                                    [rax+0x0] = 1;
-                                                    __tmainCRTStartup();
-                                                    t17 = t1 + 32;
                                                     t18 = stack_pop();
+                                                    t19 = stack_pop();
+                                                    _cexit(*(DWORD*)0x14000C006, *(DWORD*)0x14000C002);
+                                                    t3 = t6;
+                                                    t11 = stack_pop();
+                                                    t4 = stack_pop();
+                                                    t2 = stack_pop();
+                                                    t18 = stack_pop();
+                                                    t19 = stack_pop();
+                                                    t5 = rax;
+                                                    exit(rax);
+                                                    t3 = *(DWORD*)0x140009779;
+                                                    *(uintptr_t*)(rax+0x0) = 1;
+                                                    __tmainCRTStartup(*(DWORD*)0x14000C006);
+                                                    t20 = stack_pop();
                                                 } while (1 != 0);
-                                                t14 = *(DWORD*)0x14000C002;
-                                                if (t14 == 0) {
+                                                t7 = *(DWORD*)0x14000C002;
+                                                if (t7 == 0) {
                                                 }
-                                                t3 = [rsi+0x0];
+                                                t4 = *(DWORD*)0x1400097D9;
+                                                t2 = 1;
+                                                t3 = *(uintptr_t*)(rsi+0x0);
                                                 if (t3 != 1) {
                                                 }
-                                                _initterm();
-                                                [rsi+0x0] = 2;
-                                                /* compare rdi vs rdi */
-                                                rax();
-                                                _pei386_runtime_relocator();
-                                                ___FARPROC__gvar_14000D1FA_();
-                                                t5 = &*(DWORD*)0x140000FF9;
-                                                [rdx+0x0] = rax;
-                                                mingw_set_invalid_parameter_handler();
-                                                _fpreset();
-                                                t6 = *(DWORD*)0x14000C022;
-                                                t7 = &[rbx+0x1];
-                                                t8 = (signed)t7;
-                                                t9 = t8 << 0x3;
-                                                malloc();
-                                                /* compare t6 vs t6 */
-                                                [rdi+0x0] = 0;
+                                                t7 = *(DWORD*)0x140009809;
+                                                t5 = *(DWORD*)0x1400097F9;
+                                                _initterm(*(DWORD*)0x1400097F9, *(DWORD*)0x140009809);
+                                                *(uintptr_t*)(rsi+0x0) = 2;
+                                                t7 = 2;
+                                                t5 = 0;
+                                                rax(0, 2);
+                                                _pei386_runtime_relocator(*(DWORD*)0x14000C006);
+                                                t8 = *(DWORD*)0x140009869;
+                                                ___FARPROC__gvar_14000D1FA_(*(DWORD*)0x140009869);
+                                                t9 = *(DWORD*)0x1400097B9;
+                                                t10 = &*(DWORD*)0x140000FF9;
+                                                *(uintptr_t*)(rdx+0x0) = rax;
+                                                mingw_set_invalid_parameter_handler(*(DWORD*)0x140000FF9, rax);
+                                                _fpreset(*(DWORD*)0x14000C006);
+                                                t11 = *(DWORD*)0x14000C022;
+                                                t2 = &*(uintptr_t*)(rbx+0x1);
+                                                t12 = (signed)t2;
+                                                t13 = t12 << 0x3;
+                                                t14 = t13;
+                                                malloc(rdi_2);
+                                                t2 = rax;
+                                                *(uintptr_t*)(rdi+0x0) = 0;
                                                 *(DWORD*)0x14000C019 = r12;
-                                                __main();
-                                                t13 = *(DWORD*)0x14000C011;
-                                                t4 = [rax+0x0];
-                                                [rax+0x0] = t13;
-                                                main();
-                                                t10 = *(DWORD*)0x14000C006;
-                                                *(DWORD*)0x14000C00A = t4;
-                                                /* compare t10 vs t10 */
-                                                t1 = rsp + 40;
-                                                t6 = stack_pop();
+                                                __main(*(DWORD*)0x14000C006);
+                                                t3 = *(DWORD*)0x140009749;
+                                                t16 = *(DWORD*)0x14000C011;
+                                                t5 = *(DWORD*)0x14000C022;
+                                                t6 = *(uintptr_t*)(rax+0x0);
+                                                *(uintptr_t*)(rax+0x0) = t16;
+                                                t7 = r12;
+                                                main(*(DWORD*)0x14000C022, *(DWORD*)0x14000C019, *(DWORD*)0x14000C011);
+                                                t8 = *(DWORD*)0x14000C006;
+                                                *(DWORD*)0x14000C00A = t6;
                                                 t11 = stack_pop();
-                                                t7 = stack_pop();
-                                                t15 = stack_pop();
-                                                t16 = stack_pop();
+                                                t4 = stack_pop();
                                                 t2 = stack_pop();
-                                                exit();
-                                                t1 = rsp - 32;
-                                                [rax+0x0] = 1;
-                                                __tmainCRTStartup();
-                                                t17 = t1 + 32;
                                                 t18 = stack_pop();
+                                                t19 = stack_pop();
+                                                t5 = rax;
+                                                exit(rax);
+                                                t3 = *(DWORD*)0x140009779;
+                                                *(uintptr_t*)(rax+0x0) = 1;
+                                                __tmainCRTStartup(*(DWORD*)0x14000C006);
+                                                t20 = stack_pop();
                                             } while (1 != 0);
-                                            t14 = *(DWORD*)0x14000C002;
-                                            if (t14 == 0) {
+                                            t7 = *(DWORD*)0x14000C002;
+                                            if (t7 == 0) {
                                             }
-                                            t3 = [rsi+0x0];
+                                            t4 = *(DWORD*)0x1400097D9;
+                                            t2 = 1;
+                                            t3 = *(uintptr_t*)(rsi+0x0);
                                             if (t3 != 1) {
                                             }
-                                            _initterm();
-                                            [rsi+0x0] = 2;
-                                            /* compare rdi vs rdi */
-                                            rax();
-                                            _pei386_runtime_relocator();
-                                            ___FARPROC__gvar_14000D1FA_();
-                                            t5 = &*(DWORD*)0x140000FF9;
-                                            [rdx+0x0] = rax;
-                                            mingw_set_invalid_parameter_handler();
-                                            _fpreset();
-                                            t6 = *(DWORD*)0x14000C022;
-                                            t7 = &[rbx+0x1];
-                                            t8 = (signed)t7;
-                                            t9 = t8 << 0x3;
-                                            malloc();
-                                            /* compare t6 vs t6 */
-                                            [rdi+0x0] = 0;
+                                            t7 = *(DWORD*)0x140009809;
+                                            t5 = *(DWORD*)0x1400097F9;
+                                            _initterm(*(DWORD*)0x1400097F9, *(DWORD*)0x140009809);
+                                            *(uintptr_t*)(rsi+0x0) = 2;
+                                            t7 = 2;
+                                            t5 = 0;
+                                            rax(0, 2);
+                                            _pei386_runtime_relocator(*(DWORD*)0x14000C006);
+                                            t8 = *(DWORD*)0x140009869;
+                                            ___FARPROC__gvar_14000D1FA_(*(DWORD*)0x140009869);
+                                            t9 = *(DWORD*)0x1400097B9;
+                                            t10 = &*(DWORD*)0x140000FF9;
+                                            *(uintptr_t*)(rdx+0x0) = rax;
+                                            mingw_set_invalid_parameter_handler(*(DWORD*)0x140000FF9, rax);
+                                            _fpreset(*(DWORD*)0x14000C006);
+                                            t11 = *(DWORD*)0x14000C022;
+                                            t2 = &*(uintptr_t*)(rbx+0x1);
+                                            t12 = (signed)t2;
+                                            t13 = t12 << 0x3;
+                                            t14 = t13;
+                                            malloc(rdi_2);
+                                            t2 = rax;
+                                            *(uintptr_t*)(rdi+0x0) = 0;
                                             *(DWORD*)0x14000C019 = r12;
-                                            __main();
-                                            t13 = *(DWORD*)0x14000C011;
-                                            t4 = [rax+0x0];
-                                            [rax+0x0] = t13;
-                                            main();
-                                            t10 = *(DWORD*)0x14000C006;
-                                            *(DWORD*)0x14000C00A = t4;
-                                            /* compare t10 vs t10 */
-                                            t1 = rsp + 40;
-                                            t6 = stack_pop();
+                                            __main(*(DWORD*)0x14000C006);
+                                            t3 = *(DWORD*)0x140009749;
+                                            t16 = *(DWORD*)0x14000C011;
+                                            t5 = *(DWORD*)0x14000C022;
+                                            t6 = *(uintptr_t*)(rax+0x0);
+                                            *(uintptr_t*)(rax+0x0) = t16;
+                                            t7 = r12;
+                                            main(*(DWORD*)0x14000C022, *(DWORD*)0x14000C019, *(DWORD*)0x14000C011);
+                                            t8 = *(DWORD*)0x14000C006;
+                                            *(DWORD*)0x14000C00A = t6;
                                             t11 = stack_pop();
-                                            t7 = stack_pop();
-                                            t15 = stack_pop();
-                                            t16 = stack_pop();
+                                            t4 = stack_pop();
                                             t2 = stack_pop();
-                                            exit();
-                                            t1 = rsp - 32;
-                                            [rax+0x0] = 1;
-                                            __tmainCRTStartup();
-                                            t17 = t1 + 32;
                                             t18 = stack_pop();
+                                            t19 = stack_pop();
+                                            t5 = rax;
+                                            exit(rax);
+                                            t3 = *(DWORD*)0x140009779;
+                                            *(uintptr_t*)(rax+0x0) = 1;
+                                            __tmainCRTStartup(*(DWORD*)0x14000C006);
+                                            t20 = stack_pop();
                                         } while (1 != 0);
-                                        t14 = *(DWORD*)0x14000C002;
-                                        if (t14 == 0) {
+                                        t7 = *(DWORD*)0x14000C002;
+                                        if (t7 == 0) {
                                         }
-                                        t3 = [rsi+0x0];
+                                        t4 = *(DWORD*)0x1400097D9;
+                                        t2 = 1;
+                                        t3 = *(uintptr_t*)(rsi+0x0);
                                         if (t3 != 1) {
                                         }
-                                        _initterm();
-                                        [rsi+0x0] = 2;
-                                        /* compare rdi vs rdi */
-                                        rax();
-                                        _pei386_runtime_relocator();
-                                        ___FARPROC__gvar_14000D1FA_();
-                                        t5 = &*(DWORD*)0x140000FF9;
-                                        [rdx+0x0] = rax;
-                                        mingw_set_invalid_parameter_handler();
-                                        _fpreset();
-                                        t6 = *(DWORD*)0x14000C022;
-                                        t7 = &[rbx+0x1];
-                                        t8 = (signed)t7;
-                                        t9 = t8 << 0x3;
-                                        malloc();
-                                        /* compare t6 vs t6 */
-                                        [rdi+0x0] = 0;
+                                        t7 = *(DWORD*)0x140009809;
+                                        t5 = *(DWORD*)0x1400097F9;
+                                        _initterm(*(DWORD*)0x1400097F9, *(DWORD*)0x140009809);
+                                        *(uintptr_t*)(rsi+0x0) = 2;
+                                        t7 = 2;
+                                        t5 = 0;
+                                        rax(0, 2);
+                                        _pei386_runtime_relocator(*(DWORD*)0x14000C006);
+                                        t8 = *(DWORD*)0x140009869;
+                                        ___FARPROC__gvar_14000D1FA_(*(DWORD*)0x140009869);
+                                        t9 = *(DWORD*)0x1400097B9;
+                                        t10 = &*(DWORD*)0x140000FF9;
+                                        *(uintptr_t*)(rdx+0x0) = rax;
+                                        mingw_set_invalid_parameter_handler(*(DWORD*)0x140000FF9, rax);
+                                        _fpreset(*(DWORD*)0x14000C006);
+                                        t11 = *(DWORD*)0x14000C022;
+                                        t2 = &*(uintptr_t*)(rbx+0x1);
+                                        t12 = (signed)t2;
+                                        t13 = t12 << 0x3;
+                                        t14 = t13;
+                                        malloc(rdi_2);
+                                        t2 = rax;
+                                        *(uintptr_t*)(rdi+0x0) = 0;
                                         *(DWORD*)0x14000C019 = r12;
-                                        __main();
-                                        t13 = *(DWORD*)0x14000C011;
-                                        t4 = [rax+0x0];
-                                        [rax+0x0] = t13;
-                                        main();
-                                        t10 = *(DWORD*)0x14000C006;
-                                        *(DWORD*)0x14000C00A = t4;
-                                        /* compare t10 vs t10 */
-                                        t1 = rsp + 40;
-                                        t6 = stack_pop();
+                                        __main(*(DWORD*)0x14000C006);
+                                        t3 = *(DWORD*)0x140009749;
+                                        t16 = *(DWORD*)0x14000C011;
+                                        t5 = *(DWORD*)0x14000C022;
+                                        t6 = *(uintptr_t*)(rax+0x0);
+                                        *(uintptr_t*)(rax+0x0) = t16;
+                                        t7 = r12;
+                                        main(*(DWORD*)0x14000C022, *(DWORD*)0x14000C019, *(DWORD*)0x14000C011);
+                                        t8 = *(DWORD*)0x14000C006;
+                                        *(DWORD*)0x14000C00A = t6;
                                         t11 = stack_pop();
-                                        t7 = stack_pop();
-                                        t15 = stack_pop();
-                                        t16 = stack_pop();
+                                        t4 = stack_pop();
                                         t2 = stack_pop();
-                                        exit();
-                                        t1 = rsp - 32;
-                                        [rax+0x0] = 1;
-                                        __tmainCRTStartup();
-                                        t17 = t1 + 32;
                                         t18 = stack_pop();
+                                        t19 = stack_pop();
+                                        t5 = rax;
+                                        exit(rax);
+                                        t3 = *(DWORD*)0x140009779;
+                                        *(uintptr_t*)(rax+0x0) = 1;
+                                        __tmainCRTStartup(*(DWORD*)0x14000C006);
+                                        t20 = stack_pop();
                                     } while (1 != 0);
-                                    t14 = *(DWORD*)0x14000C002;
-                                    if (t14 == 0) {
+                                    t7 = *(DWORD*)0x14000C002;
+                                    if (t7 == 0) {
                                     }
-                                    t3 = [rsi+0x0];
+                                    t4 = *(DWORD*)0x1400097D9;
+                                    t2 = 1;
+                                    t3 = *(uintptr_t*)(rsi+0x0);
                                     if (t3 != 1) {
                                     }
-                                    _initterm();
-                                    [rsi+0x0] = 2;
-                                    /* compare rdi vs rdi */
-                                    rax();
-                                    _pei386_runtime_relocator();
-                                    ___FARPROC__gvar_14000D1FA_();
-                                    t5 = &*(DWORD*)0x140000FF9;
-                                    [rdx+0x0] = rax;
-                                    mingw_set_invalid_parameter_handler();
-                                    _fpreset();
-                                    t6 = *(DWORD*)0x14000C022;
-                                    t7 = &[rbx+0x1];
-                                    t8 = (signed)t7;
-                                    t9 = t8 << 0x3;
-                                    malloc();
-                                    /* compare t6 vs t6 */
-                                    [rdi+0x0] = 0;
+                                    t7 = *(DWORD*)0x140009809;
+                                    t5 = *(DWORD*)0x1400097F9;
+                                    _initterm(*(DWORD*)0x1400097F9, *(DWORD*)0x140009809);
+                                    *(uintptr_t*)(rsi+0x0) = 2;
+                                    t7 = 2;
+                                    t5 = 0;
+                                    rax(0, 2);
+                                    _pei386_runtime_relocator(*(DWORD*)0x14000C006);
+                                    t8 = *(DWORD*)0x140009869;
+                                    ___FARPROC__gvar_14000D1FA_(*(DWORD*)0x140009869);
+                                    t9 = *(DWORD*)0x1400097B9;
+                                    t10 = &*(DWORD*)0x140000FF9;
+                                    *(uintptr_t*)(rdx+0x0) = rax;
+                                    mingw_set_invalid_parameter_handler(*(DWORD*)0x140000FF9, rax);
+                                    _fpreset(*(DWORD*)0x14000C006);
+                                    t11 = *(DWORD*)0x14000C022;
+                                    t2 = &*(uintptr_t*)(rbx+0x1);
+                                    t12 = (signed)t2;
+                                    t13 = t12 << 0x3;
+                                    t14 = t13;
+                                    malloc(rdi_2);
+                                    t2 = rax;
+                                    *(uintptr_t*)(rdi+0x0) = 0;
                                     *(DWORD*)0x14000C019 = r12;
-                                    __main();
-                                    t13 = *(DWORD*)0x14000C011;
-                                    t4 = [rax+0x0];
-                                    [rax+0x0] = t13;
-                                    main();
-                                    t10 = *(DWORD*)0x14000C006;
-                                    *(DWORD*)0x14000C00A = t4;
-                                    /* compare t10 vs t10 */
-                                    t1 = rsp + 40;
-                                    t6 = stack_pop();
+                                    __main(*(DWORD*)0x14000C006);
+                                    t3 = *(DWORD*)0x140009749;
+                                    t16 = *(DWORD*)0x14000C011;
+                                    t5 = *(DWORD*)0x14000C022;
+                                    t6 = *(uintptr_t*)(rax+0x0);
+                                    *(uintptr_t*)(rax+0x0) = t16;
+                                    t7 = r12;
+                                    main(*(DWORD*)0x14000C022, *(DWORD*)0x14000C019, *(DWORD*)0x14000C011);
+                                    t8 = *(DWORD*)0x14000C006;
+                                    *(DWORD*)0x14000C00A = t6;
                                     t11 = stack_pop();
-                                    t7 = stack_pop();
-                                    t15 = stack_pop();
-                                    t16 = stack_pop();
+                                    t4 = stack_pop();
                                     t2 = stack_pop();
-                                    exit();
-                                    t1 = rsp - 32;
-                                    [rax+0x0] = 1;
-                                    __tmainCRTStartup();
-                                    t17 = t1 + 32;
                                     t18 = stack_pop();
+                                    t19 = stack_pop();
+                                    t5 = rax;
+                                    exit(rax);
+                                    t3 = *(DWORD*)0x140009779;
+                                    *(uintptr_t*)(rax+0x0) = 1;
+                                    __tmainCRTStartup(*(DWORD*)0x14000C006);
+                                    t20 = stack_pop();
                                 } while (1 != 0);
-                                t14 = *(DWORD*)0x14000C002;
-                                if (t14 == 0) {
+                                t7 = *(DWORD*)0x14000C002;
+                                if (t7 == 0) {
                                 }
-                                t3 = [rsi+0x0];
+                                t4 = *(DWORD*)0x1400097D9;
+                                t2 = 1;
+                                t3 = *(uintptr_t*)(rsi+0x0);
                                 if (t3 != 1) {
                                 }
-                                _initterm();
-                                [rsi+0x0] = 2;
-                                /* compare rdi vs rdi */
-                                rax();
-                                _pei386_runtime_relocator();
-                                ___FARPROC__gvar_14000D1FA_();
-                                t5 = &*(DWORD*)0x140000FF9;
-                                [rdx+0x0] = rax;
-                                mingw_set_invalid_parameter_handler();
-                                _fpreset();
-                                t6 = *(DWORD*)0x14000C022;
-                                t7 = &[rbx+0x1];
-                                t8 = (signed)t7;
-                                t9 = t8 << 0x3;
-                                malloc();
-                                /* compare t6 vs t6 */
-                                [rdi+0x0] = 0;
+                                t7 = *(DWORD*)0x140009809;
+                                t5 = *(DWORD*)0x1400097F9;
+                                _initterm(*(DWORD*)0x1400097F9, *(DWORD*)0x140009809);
+                                *(uintptr_t*)(rsi+0x0) = 2;
+                                t7 = 2;
+                                t5 = 0;
+                                rax(0, 2);
+                                _pei386_runtime_relocator(*(DWORD*)0x14000C006);
+                                t8 = *(DWORD*)0x140009869;
+                                ___FARPROC__gvar_14000D1FA_(*(DWORD*)0x140009869);
+                                t9 = *(DWORD*)0x1400097B9;
+                                t10 = &*(DWORD*)0x140000FF9;
+                                *(uintptr_t*)(rdx+0x0) = rax;
+                                mingw_set_invalid_parameter_handler(*(DWORD*)0x140000FF9, rax);
+                                _fpreset(*(DWORD*)0x14000C006);
+                                t11 = *(DWORD*)0x14000C022;
+                                t2 = &*(uintptr_t*)(rbx+0x1);
+                                t12 = (signed)t2;
+                                t13 = t12 << 0x3;
+                                t14 = t13;
+                                malloc(rdi_2);
+                                t2 = rax;
+                                *(uintptr_t*)(rdi+0x0) = 0;
                                 *(DWORD*)0x14000C019 = r12;
-                                __main();
-                                t13 = *(DWORD*)0x14000C011;
-                                t4 = [rax+0x0];
-                                [rax+0x0] = t13;
-                                main();
-                                t10 = *(DWORD*)0x14000C006;
-                                *(DWORD*)0x14000C00A = t4;
-                                /* compare t10 vs t10 */
-                                t1 = rsp + 40;
-                                t6 = stack_pop();
+                                __main(*(DWORD*)0x14000C006);
+                                t3 = *(DWORD*)0x140009749;
+                                t16 = *(DWORD*)0x14000C011;
+                                t5 = *(DWORD*)0x14000C022;
+                                t6 = *(uintptr_t*)(rax+0x0);
+                                *(uintptr_t*)(rax+0x0) = t16;
+                                t7 = r12;
+                                main(*(DWORD*)0x14000C022, *(DWORD*)0x14000C019, *(DWORD*)0x14000C011);
+                                t8 = *(DWORD*)0x14000C006;
+                                *(DWORD*)0x14000C00A = t6;
                                 t11 = stack_pop();
-                                t7 = stack_pop();
-                                t15 = stack_pop();
-                                t16 = stack_pop();
+                                t4 = stack_pop();
                                 t2 = stack_pop();
-                                exit();
-                                t1 = rsp - 32;
-                                [rax+0x0] = 1;
-                                __tmainCRTStartup();
-                                t17 = t1 + 32;
                                 t18 = stack_pop();
+                                t19 = stack_pop();
+                                t5 = rax;
+                                exit(rax);
+                                t3 = *(DWORD*)0x140009779;
+                                *(uintptr_t*)(rax+0x0) = 1;
+                                __tmainCRTStartup(*(DWORD*)0x14000C006);
+                                t20 = stack_pop();
                             } while (1 != 0);
-                            t14 = *(DWORD*)0x14000C002;
-                            if (t14 == 0) {
+                            t7 = *(DWORD*)0x14000C002;
+                            if (t7 == 0) {
                             }
-                            t3 = [rsi+0x0];
+                            t4 = *(DWORD*)0x1400097D9;
+                            t2 = 1;
+                            t3 = *(uintptr_t*)(rsi+0x0);
                             if (t3 != 1) {
                             }
-                            _initterm();
-                            [rsi+0x0] = 2;
-                            /* compare rdi vs rdi */
-                            rax();
-                            _pei386_runtime_relocator();
-                            ___FARPROC__gvar_14000D1FA_();
-                            t5 = &*(DWORD*)0x140000FF9;
-                            [rdx+0x0] = rax;
-                            mingw_set_invalid_parameter_handler();
-                            _fpreset();
-                            t6 = *(DWORD*)0x14000C022;
-                            t7 = &[rbx+0x1];
-                            t8 = (signed)t7;
-                            t9 = t8 << 0x3;
-                            malloc();
-                            /* compare t6 vs t6 */
-                            [rdi+0x0] = 0;
+                            t7 = *(DWORD*)0x140009809;
+                            t5 = *(DWORD*)0x1400097F9;
+                            _initterm(*(DWORD*)0x1400097F9, *(DWORD*)0x140009809);
+                            *(uintptr_t*)(rsi+0x0) = 2;
+                            t7 = 2;
+                            t5 = 0;
+                            rax(0, 2);
+                            _pei386_runtime_relocator(*(DWORD*)0x14000C006);
+                            t8 = *(DWORD*)0x140009869;
+                            ___FARPROC__gvar_14000D1FA_(*(DWORD*)0x140009869);
+                            t9 = *(DWORD*)0x1400097B9;
+                            t10 = &*(DWORD*)0x140000FF9;
+                            *(uintptr_t*)(rdx+0x0) = rax;
+                            mingw_set_invalid_parameter_handler(*(DWORD*)0x140000FF9, rax);
+                            _fpreset(*(DWORD*)0x14000C006);
+                            t11 = *(DWORD*)0x14000C022;
+                            t2 = &*(uintptr_t*)(rbx+0x1);
+                            t12 = (signed)t2;
+                            t13 = t12 << 0x3;
+                            t14 = t13;
+                            malloc(rdi_2);
+                            t2 = rax;
+                            *(uintptr_t*)(rdi+0x0) = 0;
                             *(DWORD*)0x14000C019 = r12;
-                            __main();
-                            t13 = *(DWORD*)0x14000C011;
-                            t4 = [rax+0x0];
-                            [rax+0x0] = t13;
-                            main();
-                            t10 = *(DWORD*)0x14000C006;
-                            *(DWORD*)0x14000C00A = t4;
-                            /* compare t10 vs t10 */
-                            t1 = rsp + 40;
-                            t6 = stack_pop();
+                            __main(*(DWORD*)0x14000C006);
+                            t3 = *(DWORD*)0x140009749;
+                            t16 = *(DWORD*)0x14000C011;
+                            t5 = *(DWORD*)0x14000C022;
+                            t6 = *(uintptr_t*)(rax+0x0);
+                            *(uintptr_t*)(rax+0x0) = t16;
+                            t7 = r12;
+                            main(*(DWORD*)0x14000C022, *(DWORD*)0x14000C019, *(DWORD*)0x14000C011);
+                            t8 = *(DWORD*)0x14000C006;
+                            *(DWORD*)0x14000C00A = t6;
                             t11 = stack_pop();
-                            t7 = stack_pop();
-                            t15 = stack_pop();
-                            t16 = stack_pop();
+                            t4 = stack_pop();
                             t2 = stack_pop();
-                            exit();
-                            t1 = rsp - 32;
-                            [rax+0x0] = 1;
-                            __tmainCRTStartup();
-                            t17 = t1 + 32;
                             t18 = stack_pop();
+                            t19 = stack_pop();
+                            t5 = rax;
+                            exit(rax);
+                            t3 = *(DWORD*)0x140009779;
+                            *(uintptr_t*)(rax+0x0) = 1;
+                            __tmainCRTStartup(*(DWORD*)0x14000C006);
+                            t20 = stack_pop();
                         } while (1 != 0);
-                        t14 = *(DWORD*)0x14000C002;
-                        if (t14 == 0) {
+                        t7 = *(DWORD*)0x14000C002;
+                        if (t7 == 0) {
                         }
-                        t3 = [rsi+0x0];
+                        t4 = *(DWORD*)0x1400097D9;
+                        t2 = 1;
+                        t3 = *(uintptr_t*)(rsi+0x0);
                         if (t3 != 1) {
                         }
-                        _initterm();
-                        [rsi+0x0] = 2;
-                        /* compare rdi vs rdi */
-                        rax();
-                        _pei386_runtime_relocator();
-                        ___FARPROC__gvar_14000D1FA_();
-                        t5 = &*(DWORD*)0x140000FF9;
-                        [rdx+0x0] = rax;
-                        mingw_set_invalid_parameter_handler();
-                        _fpreset();
-                        t6 = *(DWORD*)0x14000C022;
-                        t7 = &[rbx+0x1];
-                        t8 = (signed)t7;
-                        t9 = t8 << 0x3;
-                        malloc();
-                        /* compare t6 vs t6 */
-                        [rdi+0x0] = 0;
+                        t7 = *(DWORD*)0x140009809;
+                        t5 = *(DWORD*)0x1400097F9;
+                        _initterm(*(DWORD*)0x1400097F9, *(DWORD*)0x140009809);
+                        *(uintptr_t*)(rsi+0x0) = 2;
+                        t7 = 2;
+                        t5 = 0;
+                        rax(0, 2);
+                        _pei386_runtime_relocator(*(DWORD*)0x14000C006);
+                        t8 = *(DWORD*)0x140009869;
+                        ___FARPROC__gvar_14000D1FA_(*(DWORD*)0x140009869);
+                        t9 = *(DWORD*)0x1400097B9;
+                        t10 = &*(DWORD*)0x140000FF9;
+                        *(uintptr_t*)(rdx+0x0) = rax;
+                        mingw_set_invalid_parameter_handler(*(DWORD*)0x140000FF9, rax);
+                        _fpreset(*(DWORD*)0x14000C006);
+                        t11 = *(DWORD*)0x14000C022;
+                        t2 = &*(uintptr_t*)(rbx+0x1);
+                        t12 = (signed)t2;
+                        t13 = t12 << 0x3;
+                        t14 = t13;
+                        malloc(rdi_2);
+                        t2 = rax;
+                        *(uintptr_t*)(rdi+0x0) = 0;
                         *(DWORD*)0x14000C019 = r12;
-                        __main();
-                        t13 = *(DWORD*)0x14000C011;
-                        t4 = [rax+0x0];
-                        [rax+0x0] = t13;
-                        main();
-                        t10 = *(DWORD*)0x14000C006;
-                        *(DWORD*)0x14000C00A = t4;
-                        /* compare t10 vs t10 */
-                        t1 = rsp + 40;
-                        t6 = stack_pop();
+                        __main(*(DWORD*)0x14000C006);
+                        t3 = *(DWORD*)0x140009749;
+                        t16 = *(DWORD*)0x14000C011;
+                        t5 = *(DWORD*)0x14000C022;
+                        t6 = *(uintptr_t*)(rax+0x0);
+                        *(uintptr_t*)(rax+0x0) = t16;
+                        t7 = r12;
+                        main(*(DWORD*)0x14000C022, *(DWORD*)0x14000C019, *(DWORD*)0x14000C011);
+                        t8 = *(DWORD*)0x14000C006;
+                        *(DWORD*)0x14000C00A = t6;
                         t11 = stack_pop();
-                        t7 = stack_pop();
-                        t15 = stack_pop();
-                        t16 = stack_pop();
+                        t4 = stack_pop();
                         t2 = stack_pop();
-                        exit();
-                        t1 = rsp - 32;
-                        [rax+0x0] = 1;
-                        __tmainCRTStartup();
-                        t17 = t1 + 32;
                         t18 = stack_pop();
+                        t19 = stack_pop();
+                        t5 = rax;
+                        exit(rax);
+                        t3 = *(DWORD*)0x140009779;
+                        *(uintptr_t*)(rax+0x0) = 1;
+                        __tmainCRTStartup(*(DWORD*)0x14000C006);
+                        t20 = stack_pop();
                     } while (1 != 0);
-                    t14 = *(DWORD*)0x14000C002;
-                    if (t14 == 0) {
+                    t7 = *(DWORD*)0x14000C002;
+                    if (t7 == 0) {
                     }
-                    t3 = [rsi+0x0];
+                    t4 = *(DWORD*)0x1400097D9;
+                    t2 = 1;
+                    t3 = *(uintptr_t*)(rsi+0x0);
                     if (t3 != 1) {
                     }
-                    _initterm();
-                    [rsi+0x0] = 2;
-                    /* compare rdi vs rdi */
-                    rax();
-                    _pei386_runtime_relocator();
-                    ___FARPROC__gvar_14000D1FA_();
-                    t5 = &*(DWORD*)0x140000FF9;
-                    [rdx+0x0] = rax;
-                    mingw_set_invalid_parameter_handler();
-                    _fpreset();
-                    t6 = *(DWORD*)0x14000C022;
-                    t7 = &[rbx+0x1];
-                    t8 = (signed)t7;
-                    t9 = t8 << 0x3;
-                    malloc();
-                    /* compare t6 vs t6 */
-                    [rdi+0x0] = 0;
+                    t7 = *(DWORD*)0x140009809;
+                    t5 = *(DWORD*)0x1400097F9;
+                    _initterm(*(DWORD*)0x1400097F9, *(DWORD*)0x140009809);
+                    *(uintptr_t*)(rsi+0x0) = 2;
+                    t7 = 2;
+                    t5 = 0;
+                    rax(0, 2);
+                    _pei386_runtime_relocator(*(DWORD*)0x14000C006);
+                    t8 = *(DWORD*)0x140009869;
+                    ___FARPROC__gvar_14000D1FA_(*(DWORD*)0x140009869);
+                    t9 = *(DWORD*)0x1400097B9;
+                    t10 = &*(DWORD*)0x140000FF9;
+                    *(uintptr_t*)(rdx+0x0) = rax;
+                    mingw_set_invalid_parameter_handler(*(DWORD*)0x140000FF9, rax);
+                    _fpreset(*(DWORD*)0x14000C006);
+                    t11 = *(DWORD*)0x14000C022;
+                    t2 = &*(uintptr_t*)(rbx+0x1);
+                    t12 = (signed)t2;
+                    t13 = t12 << 0x3;
+                    t14 = t13;
+                    malloc(rdi_2);
+                    t2 = rax;
+                    *(uintptr_t*)(rdi+0x0) = 0;
                     *(DWORD*)0x14000C019 = r12;
-                    __main();
-                    t13 = *(DWORD*)0x14000C011;
-                    t4 = [rax+0x0];
-                    [rax+0x0] = t13;
-                    main();
-                    t10 = *(DWORD*)0x14000C006;
-                    *(DWORD*)0x14000C00A = t4;
-                    /* compare t10 vs t10 */
-                    t1 = rsp + 40;
-                    t6 = stack_pop();
+                    __main(*(DWORD*)0x14000C006);
+                    t3 = *(DWORD*)0x140009749;
+                    t16 = *(DWORD*)0x14000C011;
+                    t5 = *(DWORD*)0x14000C022;
+                    t6 = *(uintptr_t*)(rax+0x0);
+                    *(uintptr_t*)(rax+0x0) = t16;
+                    t7 = r12;
+                    main(*(DWORD*)0x14000C022, *(DWORD*)0x14000C019, *(DWORD*)0x14000C011);
+                    t8 = *(DWORD*)0x14000C006;
+                    *(DWORD*)0x14000C00A = t6;
                     t11 = stack_pop();
-                    t7 = stack_pop();
-                    t15 = stack_pop();
-                    t16 = stack_pop();
+                    t4 = stack_pop();
                     t2 = stack_pop();
-                    exit();
-                    t1 = rsp - 32;
-                    [rax+0x0] = 1;
-                    __tmainCRTStartup();
-                    t17 = t1 + 32;
                     t18 = stack_pop();
+                    t19 = stack_pop();
+                    t5 = rax;
+                    exit(rax);
+                    t3 = *(DWORD*)0x140009779;
+                    *(uintptr_t*)(rax+0x0) = 1;
+                    __tmainCRTStartup(*(DWORD*)0x14000C006);
+                    t20 = stack_pop();
                 } while (1 != 0);
-                t14 = *(DWORD*)0x14000C002;
-                if (t14 == 0) {
+                t7 = *(DWORD*)0x14000C002;
+                if (t7 == 0) {
                 }
-                t3 = [rsi+0x0];
+                t4 = *(DWORD*)0x1400097D9;
+                t2 = 1;
+                t3 = *(uintptr_t*)(rsi+0x0);
                 if (t3 != 1) {
                 }
-                _initterm();
-                [rsi+0x0] = 2;
-                /* compare rdi vs rdi */
-                rax();
-                _pei386_runtime_relocator();
-                ___FARPROC__gvar_14000D1FA_();
-                t5 = &*(DWORD*)0x140000FF9;
-                [rdx+0x0] = rax;
-                mingw_set_invalid_parameter_handler();
-                _fpreset();
-                t6 = *(DWORD*)0x14000C022;
-                t7 = &[rbx+0x1];
-                t8 = (signed)t7;
-                t9 = t8 << 0x3;
-                malloc();
-                /* compare t6 vs t6 */
-                [rdi+0x0] = 0;
+                t7 = *(DWORD*)0x140009809;
+                t5 = *(DWORD*)0x1400097F9;
+                _initterm(*(DWORD*)0x1400097F9, *(DWORD*)0x140009809);
+                *(uintptr_t*)(rsi+0x0) = 2;
+                t7 = 2;
+                t5 = 0;
+                rax(0, 2);
+                _pei386_runtime_relocator(*(DWORD*)0x14000C006);
+                t8 = *(DWORD*)0x140009869;
+                ___FARPROC__gvar_14000D1FA_(*(DWORD*)0x140009869);
+                t9 = *(DWORD*)0x1400097B9;
+                t10 = &*(DWORD*)0x140000FF9;
+                *(uintptr_t*)(rdx+0x0) = rax;
+                mingw_set_invalid_parameter_handler(*(DWORD*)0x140000FF9, rax);
+                _fpreset(*(DWORD*)0x14000C006);
+                t11 = *(DWORD*)0x14000C022;
+                t2 = &*(uintptr_t*)(rbx+0x1);
+                t12 = (signed)t2;
+                t13 = t12 << 0x3;
+                t14 = t13;
+                malloc(rdi_2);
+                t2 = rax;
+                *(uintptr_t*)(rdi+0x0) = 0;
                 *(DWORD*)0x14000C019 = r12;
-                __main();
-                t13 = *(DWORD*)0x14000C011;
-                t4 = [rax+0x0];
-                [rax+0x0] = t13;
-                main();
-                t10 = *(DWORD*)0x14000C006;
-                *(DWORD*)0x14000C00A = t4;
-                /* compare t10 vs t10 */
-                t1 = rsp + 40;
-                t6 = stack_pop();
+                __main(*(DWORD*)0x14000C006);
+                t3 = *(DWORD*)0x140009749;
+                t16 = *(DWORD*)0x14000C011;
+                t5 = *(DWORD*)0x14000C022;
+                t6 = *(uintptr_t*)(rax+0x0);
+                *(uintptr_t*)(rax+0x0) = t16;
+                t7 = r12;
+                main(*(DWORD*)0x14000C022, *(DWORD*)0x14000C019, *(DWORD*)0x14000C011);
+                t8 = *(DWORD*)0x14000C006;
+                *(DWORD*)0x14000C00A = t6;
                 t11 = stack_pop();
-                t7 = stack_pop();
-                t15 = stack_pop();
-                t16 = stack_pop();
+                t4 = stack_pop();
                 t2 = stack_pop();
-                exit();
-                t1 = rsp - 32;
-                [rax+0x0] = 1;
-                __tmainCRTStartup();
-                t17 = t1 + 32;
                 t18 = stack_pop();
+                t19 = stack_pop();
+                t5 = rax;
+                exit(rax);
+                t3 = *(DWORD*)0x140009779;
+                *(uintptr_t*)(rax+0x0) = 1;
+                __tmainCRTStartup(*(DWORD*)0x14000C006);
+                t20 = stack_pop();
             } while (1 != 0);
-            t14 = *(DWORD*)0x14000C002;
-            if (t14 == 0) {
+            t7 = *(DWORD*)0x14000C002;
+            if (t7 == 0) {
             }
-            t3 = [rsi+0x0];
+            t4 = *(DWORD*)0x1400097D9;
+            t2 = 1;
+            t3 = *(uintptr_t*)(rsi+0x0);
             if (t3 != 1) {
             }
-            _initterm();
-            [rsi+0x0] = 2;
-            /* compare rdi vs rdi */
-            rax();
-            _pei386_runtime_relocator();
-            ___FARPROC__gvar_14000D1FA_();
-            t5 = &*(DWORD*)0x140000FF9;
-            [rdx+0x0] = rax;
-            mingw_set_invalid_parameter_handler();
-            _fpreset();
-            t6 = *(DWORD*)0x14000C022;
-            t7 = &[rbx+0x1];
-            t8 = (signed)t7;
-            t9 = t8 << 0x3;
-            malloc();
-            /* compare t6 vs t6 */
-            [rdi+0x0] = 0;
+            t7 = *(DWORD*)0x140009809;
+            t5 = *(DWORD*)0x1400097F9;
+            _initterm(*(DWORD*)0x1400097F9, *(DWORD*)0x140009809);
+            *(uintptr_t*)(rsi+0x0) = 2;
+            t7 = 2;
+            t5 = 0;
+            rax(0, 2);
+            _pei386_runtime_relocator(*(DWORD*)0x14000C006);
+            t8 = *(DWORD*)0x140009869;
+            ___FARPROC__gvar_14000D1FA_(*(DWORD*)0x140009869);
+            t9 = *(DWORD*)0x1400097B9;
+            t10 = &*(DWORD*)0x140000FF9;
+            *(uintptr_t*)(rdx+0x0) = rax;
+            mingw_set_invalid_parameter_handler(*(DWORD*)0x140000FF9, rax);
+            _fpreset(*(DWORD*)0x14000C006);
+            t11 = *(DWORD*)0x14000C022;
+            t2 = &*(uintptr_t*)(rbx+0x1);
+            t12 = (signed)t2;
+            t13 = t12 << 0x3;
+            t14 = t13;
+            malloc(rdi_2);
+            t2 = rax;
+            *(uintptr_t*)(rdi+0x0) = 0;
             *(DWORD*)0x14000C019 = r12;
-            __main();
-            t13 = *(DWORD*)0x14000C011;
-            t4 = [rax+0x0];
-            [rax+0x0] = t13;
-            main();
-            t10 = *(DWORD*)0x14000C006;
-            *(DWORD*)0x14000C00A = t4;
-            /* compare t10 vs t10 */
-            t1 = rsp + 40;
-            t6 = stack_pop();
+            __main(*(DWORD*)0x14000C006);
+            t3 = *(DWORD*)0x140009749;
+            t16 = *(DWORD*)0x14000C011;
+            t5 = *(DWORD*)0x14000C022;
+            t6 = *(uintptr_t*)(rax+0x0);
+            *(uintptr_t*)(rax+0x0) = t16;
+            t7 = r12;
+            main(*(DWORD*)0x14000C022, *(DWORD*)0x14000C019, *(DWORD*)0x14000C011);
+            t8 = *(DWORD*)0x14000C006;
+            *(DWORD*)0x14000C00A = t6;
             t11 = stack_pop();
-            t7 = stack_pop();
-            t15 = stack_pop();
-            t16 = stack_pop();
+            t4 = stack_pop();
             t2 = stack_pop();
-            exit();
-            t1 = rsp - 32;
-            [rax+0x0] = 1;
-            __tmainCRTStartup();
-            t17 = t1 + 32;
             t18 = stack_pop();
+            t19 = stack_pop();
+            t5 = rax;
+            exit(rax);
+            t3 = *(DWORD*)0x140009779;
+            *(uintptr_t*)(rax+0x0) = 1;
+            __tmainCRTStartup(*(DWORD*)0x14000C006);
+            t20 = stack_pop();
         } while (1 != 0);
-        t14 = *(DWORD*)0x14000C002;
-        if (t14 == 0) {
+        t7 = *(DWORD*)0x14000C002;
+        if (t7 == 0) {
         }
-        t3 = [rsi+0x0];
+        t4 = *(DWORD*)0x1400097D9;
+        t2 = 1;
+        t3 = *(uintptr_t*)(rsi+0x0);
         if (t3 != 1) {
         }
-        _initterm();
-        [rsi+0x0] = 2;
-        /* compare rdi vs rdi */
-        rax();
-        _pei386_runtime_relocator();
-        ___FARPROC__gvar_14000D1FA_();
-        t5 = &*(DWORD*)0x140000FF9;
-        [rdx+0x0] = rax;
-        mingw_set_invalid_parameter_handler();
-        _fpreset();
-        t6 = *(DWORD*)0x14000C022;
-        t7 = &[rbx+0x1];
-        t8 = (signed)t7;
-        t9 = t8 << 0x3;
-        malloc();
-        /* compare t6 vs t6 */
-        [rdi+0x0] = 0;
+        t7 = *(DWORD*)0x140009809;
+        t5 = *(DWORD*)0x1400097F9;
+        _initterm(*(DWORD*)0x1400097F9, *(DWORD*)0x140009809);
+        *(uintptr_t*)(rsi+0x0) = 2;
+        t7 = 2;
+        t5 = 0;
+        rax(0, 2);
+        _pei386_runtime_relocator(*(DWORD*)0x14000C006);
+        t8 = *(DWORD*)0x140009869;
+        ___FARPROC__gvar_14000D1FA_(*(DWORD*)0x140009869);
+        t9 = *(DWORD*)0x1400097B9;
+        t10 = &*(DWORD*)0x140000FF9;
+        *(uintptr_t*)(rdx+0x0) = rax;
+        mingw_set_invalid_parameter_handler(*(DWORD*)0x140000FF9, rax);
+        _fpreset(*(DWORD*)0x14000C006);
+        t11 = *(DWORD*)0x14000C022;
+        t2 = &*(uintptr_t*)(rbx+0x1);
+        t12 = (signed)t2;
+        t13 = t12 << 0x3;
+        t14 = t13;
+        malloc(rdi_2);
+        t2 = rax;
+        *(uintptr_t*)(rdi+0x0) = 0;
         *(DWORD*)0x14000C019 = r12;
-        __main();
-        t13 = *(DWORD*)0x14000C011;
-        t4 = [rax+0x0];
-        [rax+0x0] = t13;
-        main();
-        t10 = *(DWORD*)0x14000C006;
-        *(DWORD*)0x14000C00A = t4;
-        /* compare t10 vs t10 */
-        t1 = rsp + 40;
-        t6 = stack_pop();
+        __main(*(DWORD*)0x14000C006);
+        t3 = *(DWORD*)0x140009749;
+        t16 = *(DWORD*)0x14000C011;
+        t5 = *(DWORD*)0x14000C022;
+        t6 = *(uintptr_t*)(rax+0x0);
+        *(uintptr_t*)(rax+0x0) = t16;
+        t7 = r12;
+        main(*(DWORD*)0x14000C022, *(DWORD*)0x14000C019, *(DWORD*)0x14000C011);
+        t8 = *(DWORD*)0x14000C006;
+        *(DWORD*)0x14000C00A = t6;
         t11 = stack_pop();
-        t7 = stack_pop();
-        t15 = stack_pop();
-        t16 = stack_pop();
+        t4 = stack_pop();
         t2 = stack_pop();
-        exit();
-        t1 = rsp - 32;
-        [rax+0x0] = 1;
-        __tmainCRTStartup();
-        t17 = t1 + 32;
         t18 = stack_pop();
+        t19 = stack_pop();
+        t5 = rax;
+        exit(rax);
+        t3 = *(DWORD*)0x140009779;
+        *(uintptr_t*)(rax+0x0) = 1;
+        __tmainCRTStartup(*(DWORD*)0x14000C006);
+        t20 = stack_pop();
     } while (1 != 0);
-    t14 = *(DWORD*)0x14000C002;
-    if (t14 == 0) {
+    t7 = *(DWORD*)0x14000C002;
+    if (t7 == 0) {
     }
 }
 
@@ -1473,18 +1788,16 @@ void mainCRTStartup(void) {
     int32_t rsp;
     int32_t rax;
 
-    t1 = rsp - 32;
     _onexit();
-    /* compare rax vs 1 */
-    t2 = t1 + 32;
-    t3 = stack_pop();
+    t1 = sbb(eax, eax);
+    t2 = stack_pop();
 }
 
 /* ═══════════════════════════════════════════════════
  * atexit @ 0x140001440 (USER)
  * Blocks: 5 | SSA vars: 14
  * ═══════════════════════════════════════════════════ */
-void atexit(int param_1, int param_2, int param_3) {
+void atexit(int param_1, int param_2) {
     /* local variables */
     int32_t rbp;
     int32_t rsp;
@@ -1493,20 +1806,17 @@ void atexit(int param_1, int param_2, int param_3) {
     int32_t rbx;
     uint64_t r8;
     int32_t rdx;
-    int32_t var_4;
 
-    t1 = rsp - 32;
-    _onexit();
-    /* compare rax vs 1 */
-    t2 = t1 + 32;
-    t3 = stack_pop();
+    _onexit(*(DWORD*)0x140001469);
+    t1 = sbb(eax, eax);
+    t2 = stack_pop();
 }
 
 /* ═══════════════════════════════════════════════════
  * printf @ 0x140001480 (USER)
  * Blocks: 1 | SSA vars: 14
  * ═══════════════════════════════════════════════════ */
-void printf(int param_1, int param_2, int param_3) {
+void printf(int param_1, int param_2) {
     /* local variables */
     int32_t rsp;
     int32_t rbp;
@@ -1515,22 +1825,21 @@ void printf(int param_1, int param_2, int param_3) {
     int32_t rcx;
     uint64_t r8;
     int32_t rdx;
-    int32_t var_4;
 
-    t1 = rsp - 56;
-    t2 = &[rsp+0x30];
-    arg_20 = rcx;
+    t1 = &*(uintptr_t*)(rsp+0x30);
     arg_30 = r8;
     arg_38 = r9;
-    t3 = &(rdx);
-    t4 = (t3);
+    t2 = &rdx;
+    t3 = t2;
+    t4 = 1;
     t5 = *(DWORD*)0x1400080A9;
-    t6 = t5();
-    __mingw_vfprintf();
-    var_4 = t6;
-    t7 = t1 + 56;
-    t8 = stack_pop();
-    t9 = stack_pop();
+    t6 = ___FARPROC__rax_1_(1);
+    t7 = rcx;
+    t8 = t3;
+    t9 = t7;
+    t10 = (__mingw_vfprintf(rcx_1, rax_2, rbx_0));
+    t11 = stack_pop();
+    t12 = stack_pop();
 }
 
 /* ═══════════════════════════════════════════════════
@@ -1543,8 +1852,8 @@ void add(void) {
     int32_t rdx;
     int32_t rax;
 
-    t1 = (rcx);
-    t2 = (rdx);
+    t1 = rcx;
+    t2 = rdx;
     t3 = t2 + t1;
     t4 = stack_pop();
 }
@@ -1564,13 +1873,15 @@ int __cdecl main(void) {
     int32_t rsi;
     int32_t invalid;
 
-    t1 = rsp - 32;
     __main();
-    add();
-    t2 = &*(DWORD*)0x140008FF9;
-    printf();
-    t3 = t1 + 32;
-    t4 = stack_pop();
+    t1 = 20;
+    t2 = 10;
+    t3 = add(10, 20);
+    t4 = &*(DWORD*)0x140008FF9;
+    t5 = t4;
+    printf(rax_0, rdx_1);
+    t6 = 0;
+    t7 = stack_pop();
 }
 
 /* ═══════════════════════════════════════════════════
@@ -1605,6 +1916,7 @@ void _setargv(int param_1, int param_2) {
     uint64_t r8;
     uint64_t r9;
 
+    t1 = 0;
 }
 
 /* ═══════════════════════════════════════════════════
@@ -1646,24 +1958,28 @@ void __report_error(int param_1, int param_2, int param_3) {
     uint64_t r8;
     int32_t var_8;
 
-    t1 = rsp - 48;
-    t2 = &[rsp+0x30];
-    t3 = rcx;
-    t4 = &arg_28;
+    t1 = &*(uintptr_t*)(rsp+0x30);
+    t2 = rcx;
+    t3 = &arg_28;
+    t4 = 2;
     arg_28 = rdx;
     arg_30 = r8;
     arg_38 = r9;
-    var_8 = t4;
-    __acrt_iob_func();
-    t5 = &*(DWORD*)0x1400091B9;
-    t6 = fwrite();
-    __acrt_iob_func();
-    vfprintf();
+    var_8 = t3;
+    __acrt_iob_func(2);
+    t5 = 1;
+    t6 = &*(DWORD*)0x1400091B9;
+    t7 = t3;
+    t8 = fwrite(*(DWORD*)0x1400091B9, 1);
+    t9 = 2;
+    __acrt_iob_func(2);
+    t10 = t2;
+    t11 = t3;
+    t12 = t8;
+    vfprintf(rax_0, rbx_0, rsi_0);
     abort();
-    t7 = t1 - 88;
-    t8 = &[rsp+0x50];
-    t9 = (signed)*(DWORD*)0x14000C09D;
-    /* compare t9 vs t9 */
+    t13 = &*(uintptr_t*)(rsp+0x50);
+    t14 = (signed)*(DWORD*)0x14000C09D;
     return;
 }
 
@@ -1685,52 +2001,52 @@ void mark_section_writable(void) {
     int32_t rdi;
     uint64_t r9;
     int32_t var_30;
+    int32_t var_C;
     int32_t var_18;
 
-    t1 = rsp - 88;
-    t2 = &[rsp+0x50];
-    t3 = (signed)*(DWORD*)0x14000C09D;
-    if (t3 != 0) {
+    t1 = &*(uintptr_t*)(rsp+0x50);
+    t2 = (signed)*(DWORD*)0x14000C09D;
+    if (t2 != 0) {
     }
-    __mingw_GetSectionForAddress();
-    /* compare rax vs rax */
-    t11 = &*(DWORD*)0x1400091D9;
-    __report_error();
-    t1 = rsp - 72;
-    t2 = &[rsp+0x40];
+    t9 = rbx;
+    t10 = __mingw_GetSectionForAddress(rbx, *(uintptr_t*)(rdx+0x8), *(uintptr_t*)(rax+0x0));
+    t6 = rbx;
+    t9 = &*(DWORD*)0x1400091D9;
+    __report_error(*(DWORD*)0x1400091D9, rbx, *(uintptr_t*)(rax+0x0));
+    t1 = &*(uintptr_t*)(rsp+0x40);
     t8 = *(DWORD*)0x14000C099;
-    /* compare t8 vs t8 */
-    t4 = *(DWORD*)0x14000C0A1;
-    t9 = &[rsi+0x0];
-    t10 = t9 << 0x3;
-    t5 = t4 + t10;
-    [rax+0x20] = rdi;
-    [rax+0x0] = 0;
+    t3 = *(DWORD*)0x14000C0A1;
+    t13 = &*(uintptr_t*)(rsi+0x0);
+    t14 = t13 << 0x3;
+    t4 = t3 + t14;
+    *(uintptr_t*)(rax+0x20) = rdi;
+    *(uintptr_t*)(rax+0x0) = 0;
     _GetPEImageBase();
-    t11 = &[rax+0x0];
-    t12 = *(DWORD*)0x14000C0A1;
+    t6 = *(uintptr_t*)(rdi+0xC);
+    t9 = &*(uintptr_t*)(rax+0x0);
+    t15 = *(DWORD*)0x14000C0A1;
     t7 = &var_30;
-    [rax+0x18] = t11;
-    ___FARPROC__gvar_14000D21A_();
-    /* compare t12 vs t12 */
-    t11 = &*(DWORD*)0x1400091F9;
-    __report_error();
-    t15 = &*(DWORD*)0x1400091D9;
-    __report_error();
-    t1 = rsp - 72;
-    t2 = &[rsp+0x40];
+    *(uintptr_t*)(rax+0x18) = t9;
+    ___FARPROC__gvar_14000D21A_(*(uintptr_t*)(rax+0x0), var_30, *(uintptr_t*)(rax+0x0));
+    t3 = *(DWORD*)0x14000C0A1;
+    t6 = *(uintptr_t*)(rdi+0x8);
+    t9 = &*(DWORD*)0x1400091F9;
+    t5 = *(uintptr_t*)(rax+0x18);
+    __report_error(*(DWORD*)0x1400091F9, *(uintptr_t*)(rdi+0x8), *(uintptr_t*)(rax+0x18));
+    t7 = rbx;
+    t19 = &*(DWORD*)0x1400091D9;
+    __report_error(*(DWORD*)0x1400091D9, rbx, *(uintptr_t*)(rax+0x0));
+    t1 = &*(uintptr_t*)(rsp+0x40);
     t8 = *(DWORD*)0x14000C099;
-    /* compare t8 vs t8 */
-    t13 = &[rax-0x4];
-    t7 = t13 & -5;
+    t3 = var_C;
+    t6 = &*(uintptr_t*)(rax-0x4);
+    t7 = t6 & -5;
     if ( == ) {
     }
     *(DWORD*)0x14000C09D = *(DWORD*)0x14000C09D + 1;
-    t1 = rsp + 88;
-    t9 = stack_pop();
-    t3 = stack_pop();
-    t14 = stack_pop();
+    t13 = stack_pop();
     t2 = stack_pop();
+    t10 = stack_pop();
 }
 
 /* ═══════════════════════════════════════════════════
@@ -1761,12 +2077,11 @@ void _pei386_runtime_relocator(int param_1, int param_2) {
     int32_t var_20;
     int32_t var_10;
 
-    t1 = rsp - 72;
-    t2 = &[rsp+0x40];
-    t3 = *(DWORD*)0x14000C099;
-    if (t3 == 0) {
+    t1 = &*(uintptr_t*)(rsp+0x40);
+    t2 = *(DWORD*)0x14000C099;
+    if (t2 == 0) {
     }
-    t1 = &arg_8;
+    t3 = &arg_8;
     t4 = stack_pop();
     t5 = stack_pop();
     t6 = stack_pop();
@@ -1774,7 +2089,6 @@ void _pei386_runtime_relocator(int param_1, int param_2) {
     t8 = stack_pop();
     t9 = stack_pop();
     t10 = stack_pop();
-    t2 = stack_pop();
 }
 
 /* ═══════════════════════════════════════════════════
@@ -1811,19 +2125,18 @@ void __mingwthr_run_key_dtors_part_0(void) {
     int32_t rax;
     int32_t rdx;
 
-    t1 = rsp - 40;
-    t2 = &[rsp+0x20];
-    t3 = &*(DWORD*)0x14000C0F9;
-    ___FARPROC__gvar_14000D1CA_();
-    t4 = *(DWORD*)0x14000C0D9;
+    t1 = &*(uintptr_t*)(rsp+0x20);
+    t2 = &*(DWORD*)0x14000C0F9;
+    t3 = t2;
+    ___FARPROC__gvar_14000D1CA_(r13_0);
+    t4 = rax;
     if (t4 == 0) {
     }
-    t1 = rsp + 40;
+    t3 = r13;
     t4 = stack_pop();
     t7 = stack_pop();
     t6 = stack_pop();
     t5 = stack_pop();
-    t3 = stack_pop();
     t2 = stack_pop();
 }
 
@@ -1844,8 +2157,7 @@ void __mingw_TLScallback(void) {
     int32_t rsi;
     int32_t rdi;
 
-    t1 = rsp - 40;
-    t2 = &[rsp+0x20];
+    t1 = &*(uintptr_t*)(rsp+0x20);
     if (rdx == 2) {
     }
 }
@@ -1863,6 +2175,8 @@ void __mingw_GetSectionForAddress(void) {
     int32_t invalid;
     uint64_t r9;
 
+    t1 = *(DWORD*)0x140009739;
+    t2 = 0;
     if ([rdx+0x0] != 23117) {
     }
 }
@@ -1879,8 +2193,11 @@ int __mingw_GetSectionCount(void) {
     uint64_t r8;
     int32_t invalid;
 
+    t1 = *(DWORD*)0x140009739;
+    t2 = 0;
     if ([rax+0x0] != 23117) {
     }
+    t1 = rcx;
 }
 
 /* ═══════════════════════════════════════════════════
@@ -1897,8 +2214,11 @@ void _GetPEImageBase(void) {
     uint64_t r9;
     int32_t r11;
 
+    t1 = *(DWORD*)0x140009739;
+    t2 = 0;
     if ([rax+0x0] != 23117) {
     }
+    t1 = rdx;
 }
 
 /* ═══════════════════════════════════════════════════
@@ -1918,11 +2238,11 @@ void ___chkstk_ms(void) {
     int32_t invalid;
     int32_t rdx;
 
-    t1 = &[rsp+0x18];
+    t1 = &*(uintptr_t*)(rsp+0x18);
     if ((unsigned)rax < (unsigned)4096) {
     }
     t1 = rcx - rax;
-    [rcx+0x0] = [rcx+0x0] | 0;
+    *(uintptr_t*)(rcx+0x0) = *(uintptr_t*)(rcx+0x0) | 0;
     t2 = stack_pop();
     t3 = stack_pop();
 }
@@ -1946,25 +2266,30 @@ void __mingw_vfprintf(void) {
     int32_t var_10;
     int32_t var_8;
 
-    t1 = rsp - 56;
-    t2 = &[rsp+0x30];
+    t1 = &*(uintptr_t*)(rsp+0x30);
+    t2 = r8;
     t3 = rcx;
+    t4 = rdx;
     _lock_file();
-    [rsp+0x20] = r8;
-    __mingw_pformat();
-    _unlock_file();
-    t4 = t1 + 56;
-    t5 = stack_pop();
-    t6 = stack_pop();
-    t7 = stack_pop();
-    t8 = stack_pop();
+    *(uintptr_t*)(rsp+0x20) = r8;
+    t5 = rdx;
+    t6 = t3;
+    t7 = 24576;
+    __mingw_pformat(24576, rbx_0);
+    t8 = t3;
+    t9 = rax;
+    t10 = _unlock_file(rbx_0);
+    t11 = stack_pop();
+    t12 = stack_pop();
+    t13 = stack_pop();
+    t14 = stack_pop();
 }
 
 /* ═══════════════════════════════════════════════════
  * __pformat_cvt @ 0x140002680 (USER)
  * Blocks: 17 | SSA vars: 17
  * ═══════════════════════════════════════════════════ */
-void __pformat_cvt(void) {
+void __pformat_cvt(int param_1) {
     /* local variables */
     int32_t rbp;
     int32_t rsp;
@@ -1980,28 +2305,27 @@ void __pformat_cvt(void) {
     int32_t var_1C;
     int32_t var_18;
 
-    t1 = rsp - 96;
-    t2 = [rdx+0x0];
-    t3 = [rdx+0x8];
-    var_10 = t2;
-    var_8 = t3;
+    t1 = *(uintptr_t*)(rdx+0x0);
+    t2 = *(uintptr_t*)(rdx+0x8);
+    var_10 = t1;
+    t3 = t2;
+    var_8 = t2;
     t4 = rcx & 32767;
     if ( != ) {
     }
     var_1C = rax;
-    t6 = rcx & 32768;
-    [rax+0x0] = t6;
-    t12 = &var_18;
+    t3 = rcx & 32768;
+    t1 = arg_30;
+    *(uintptr_t*)(rax+0x0) = t3;
+    t6 = &var_18;
     t8 = &*(DWORD*)0x140008039;
-    [rsp+0x30] = r9;
-    t9 = &var_1C;
-    [rsp+0x28] = invalid;
-    t10 = &var_10;
-    [rsp+0x38] = t12;
-    [rsp+0x20] = invalid;
-    __gdtoa();
-    t1 = rsp + 96;
-    t11 = stack_pop();
+    *(uintptr_t*)(rsp+0x30) = r9;
+    t9 = &4;
+    *(uintptr_t*)(rsp+0x28) = invalid;
+    t10 = &t1;
+    *(uintptr_t*)(rsp+0x38) = t6;
+    *(uintptr_t*)(rsp+0x20) = invalid;
+    __gdtoa(*(DWORD*)0x140008039, 0, var_10, var_1C);
 }
 
 /* ═══════════════════════════════════════════════════
@@ -2024,12 +2348,12 @@ void __pformat_putc(void) {
     int32_t var_10;
     int32_t var_28;
 
-    t1 = rsp - 40;
-    t2 = &[rsp+0x20];
-    t3 = [rdx+0x8];
-    if (t3 != 0) {
+    t1 = &*(uintptr_t*)(rsp+0x20);
+    t2 = *(uintptr_t*)(rdx+0x8);
+    if (t2 != 0) {
     }
-    t3 = rdx & 32;
+    t3 = *(uintptr_t*)(rbx+0x0);
+    t2 = rdx & 32;
     if ( != ) {
     }
 }
@@ -2058,57 +2382,60 @@ void __pformat_wputchars(void) {
     int32_t var_10;
     int32_t var_28;
 
-    t1 = rsp - 88;
-    t2 = &[rsp+0x50];
-    t3 = &var_18;
-    t4 = &var_10;
-    t5 = rdx;
-    var_28 = t3;
-    wcrtomb();
-    t6 = [rbx+0x10];
-    /* compare t5 vs t6 */
-    /* compare t6 vs t6 */
-    t7 = [rbx+0xC];
-    t8 = t5;
-    /* compare t7 vs t8 */
-    t3 = rax - rsi;
-    [rbx+0xC] = t3;
+    t1 = &*(uintptr_t*)(rsp+0x50);
+    t2 = &var_18;
+    t3 = &var_10;
+    t4 = rdx;
+    t5 = 0;
+    t6 = t2;
+    t7 = t3;
+    var_28 = t2;
+    wcrtomb(rdi_0, 0, rax_0);
+    t8 = *(uintptr_t*)(rbx+0x10);
+    t9 = t8;
+    t10 = t4;
+    t11 = *(uintptr_t*)(rbx+0xC);
+    t12 = t4;
+    t2 = rax - rsi;
+    *(uintptr_t*)(rbx+0xC) = t2;
     if ([rbx+0x9] != 0) {
     }
-    t9 = invalid + 1;
-    t10 = (unsigned)[r12+0x0];
-    wcrtomb();
-    /* compare rax vs rax */
-    t3 = [rbx+0xC];
-    t10 = &[rax-0x1];
-    [rbx+0xC] = t10;
-    if (t3 != 0) {
+    t4 = 0;
+    t13 = invalid + 1;
+    t5 = (unsigned)*(uintptr_t*)(r12+0x0);
+    t6 = t2;
+    t7 = rdi;
+    wcrtomb(rdi, *(uintptr_t*)(r12+0x0), var_28);
+    t2 = *(uintptr_t*)(rbx+0xC);
+    t5 = &*(uintptr_t*)(rax-0x1);
+    *(uintptr_t*)(rbx+0xC) = t5;
+    if (t2 != 0) {
     }
-    t1 = rsp + 88;
-    t15 = stack_pop();
-    t5 = stack_pop();
+    t18 = stack_pop();
     t4 = stack_pop();
+    t3 = stack_pop();
+    t19 = stack_pop();
+    t20 = stack_pop();
+    t15 = stack_pop();
     t16 = stack_pop();
-    t17 = stack_pop();
-    t11 = stack_pop();
-    t12 = stack_pop();
-    t2 = stack_pop();
-    t3 = rax - 1;
-    t11 = &[rdi+0x1];
-    t10 = [rbx+0x8];
-    t12 = r15 + 1;
-    if (t10 != 0) {
+    t2 = rax - 1;
+    t15 = &*(uintptr_t*)(rdi+0x1);
+    t5 = *(uintptr_t*)(rbx+0x8);
+    t16 = r15 + 1;
+    if (t5 != 0) {
     }
-    t13 = (signed)[r15-0x1];
-    t10 = rdx & 32;
+    t7 = (signed)*(uintptr_t*)(r15-0x1);
+    t2 = *(uintptr_t*)(rbx+0x0);
+    t5 = rdx & 32;
     if ( == ) {
     }
-    t5 = rsi + 1;
-    t6 = invalid - t5;
-    if (t6 != 0) {
+    t4 = rsi + 1;
+    t2 = invalid;
+    t8 = invalid - t4;
+    if (t8 != 0) {
     }
-    [rbx+0xC] = -1;
-    t9 = &[rsi-0x1];
+    *(uintptr_t*)(rbx+0xC) = -1;
+    t13 = &*(uintptr_t*)(rsi-0x1);
     if (rsi != 0) {
     }
 }
@@ -2128,22 +2455,24 @@ void __pformat_putchars(void) {
     int32_t rbx;
     int32_t rcx;
 
-    t1 = rsp - 40;
-    t2 = &[rsp+0x20];
-    t3 = [r8+0x10];
-    t4 = rdx;
-    /* compare rdx vs t3 */
-    /* compare t3 vs t3 */
-    t5 = [r8+0xC];
-    t6 = t4;
-    if (t5 > t6) {
+    t1 = &*(uintptr_t*)(rsp+0x20);
+    t2 = *(uintptr_t*)(r8+0x10);
+    t3 = rdx;
+    t4 = t2;
+    t5 = rcx;
+    t6 = rdx;
+    t7 = *(uintptr_t*)(r8+0xC);
+    t8 = t3;
+    if (t7 > t8) {
     }
-    t4 = &[rdx+0x1];
-    t6 = t4 + rsi;
-    t9 = rsi + 1;
+    t2 = *(uintptr_t*)(rbx+0x8);
+    t3 = &*(uintptr_t*)(rdx+0x1);
+    t8 = t3 + rsi;
+    t5 = rsi + 1;
     if (rax != 0) {
     }
-    t10 = (signed)[rsi-0x1];
+    t9 = (signed)*(uintptr_t*)(rsi-0x1);
+    t4 = *(uintptr_t*)(rbx+0x0);
     if (rax == 0) {
     }
 }
@@ -2164,11 +2493,11 @@ void __pformat_puts(void) {
     uint64_t r8;
     int32_t invalid;
 
-    t1 = rsp - 32;
-    t2 = &[rsp+0x20];
-    t3 = &*(DWORD*)0x140009349;
-    /* compare rcx vs rcx */
-    t4 = (signed)[rdx+0x10];
+    t1 = &*(uintptr_t*)(rsp+0x20);
+    t2 = &*(DWORD*)0x140009349;
+    t3 = rdx;
+    t4 = (signed)*(uintptr_t*)(rdx+0x10);
+    t5 = t2;
     if (t4 < 0) {
     }
     return;
@@ -2192,23 +2521,22 @@ void __pformat_emit_inf_or_nan(void) {
     int32_t var_3;
     int32_t var_4;
 
-    t1 = rsp - 48;
-    [r8+0x10] = -1;
+    *(uintptr_t*)(r8+0x10) = -1;
     if (rcx != 0) {
     }
     t4 = invalid & 32;
-    t9 = (unsigned)[rdx+0x0];
-    t5 = t9 & -33;
-    t6 = t5 | t4;
-    [r9+0x0] = t6;
-    t8 = 0 + 1;
-    if (t8 != 3) {
+    t5 = 0;
+    t1 = (unsigned)*(uintptr_t*)(rdx+0x0);
+    t6 = t1 & -33;
+    t7 = t6 | t4;
+    *(uintptr_t*)(r9+0x0) = t7;
+    t9 = 0 + 1;
+    if (t9 != 3) {
     }
-    t11 = &[r9+0x3];
-    t12 = t11 - invalid;
-    __pformat_putchars();
-    t1 = rsp + 48;
-    t13 = stack_pop();
+    t10 = &*(uintptr_t*)(r9+0x3);
+    t5 = r11;
+    t11 = t10 - invalid;
+    __pformat_putchars(r11, rdx_0, -1, rax_3);
 }
 
 /* ═══════════════════════════════════════════════════
@@ -2233,61 +2561,62 @@ void __pformat_xint_isra_0(int param_1) {
     int32_t r14;
     int32_t r15;
 
-    t1 = rsp - 56;
-    t2 = &[rsp+0x30];
+    t1 = &*(uintptr_t*)(rsp+0x30);
     if (rcx == 111) {
     }
-    t6 = r8 * r9;
-    t7 = (unsigned)t6 >> 0x21;
-    t8 = rax + -1431655765;
-    t9 = [rbx+0xC];
-    /* compare t9 vs t8 */
-    t5 = (signed)t9;
-    t10 = t5 + 15;
-    t11 = t10 & -16;
-    ___chkstk_ms();
-    t1 = rsp - t11;
-    /* compare 0 vs 111 */
-    t12 = (flags_ZF == 0);
-    t13 = &[rsp+0x20];
-    t14 = &[invalid+0x7];
-    /* compare rdx vs rdx */
+    t8 = r8 * r9;
+    t9 = (unsigned)t8 >> 0x21;
+    t3 = rax + -1431655765;
+    t10 = *(uintptr_t*)(rbx+0xC);
+    t5 = t10;
+    t6 = (signed)t10;
+    t11 = t6 + 15;
+    t12 = t11 & -16;
+    ___chkstk_ms(4);
+    t13 = (flags_ZF == 0);
+    t14 = &*(uintptr_t*)(rsp+0x20);
+    t15 = &*(uintptr_t*)(invalid+0x7);
     t17 = r12;
-    t21 = invalid & 32;
-    t20 = t17 + 1;
-    t15 = t21 & rdx;
-    t9 = &[rax+0x30];
-    t5 = t15 + 55;
-    t10 = t5 | t9;
-    t16 = t9;
-    /* compare t16 vs 57 */
-    t22 = (unsigned)rdx >> rcx;
-    [rsi-0x1] = t16;
-    if (t22 != 0) {
+    t22 = invalid & 32;
+    t3 = t22;
+    t21 = t17 + 1;
+    t5 = t22 & rdx;
+    t10 = &*(uintptr_t*)(rax+0x30);
+    t6 = t5 + 55;
+    t11 = t6 | t10;
+    t16 = t10;
+    t12 = t16;
+    t19 = (unsigned)rdx >> rcx;
+    *(uintptr_t*)(rsi-0x1) = t16;
+    if (t19 != 0) {
     }
-    t13 = (r12);
-    if (rsi == t13) {
+    t14 = r12;
+    if (rsi == t14) {
     }
     if (invalid == 0) {
     }
-    [rbx+0xC] = -1;
+    *(uintptr_t*)(rbx+0xC) = -1;
     if (invalid != 111) {
     }
     t17 = rsi - 1;
     if (rdi != 0) {
     }
     t4 = rdi & 8192;
-    t24 = (signed)[rsi+0x0];
+    t7 = (signed)*(uintptr_t*)(rsi+0x0);
+    t19 = *(uintptr_t*)(rbx+0x0);
     if ( == ) {
     }
     t4 = rdi & -2049;
-    [rbx+0x8] = t4;
+    *(uintptr_t*)(rbx+0x8) = t4;
     if (invalid != 0) {
     }
-    t22 = &[rsi+0x1];
-    [rsi+0x0] = 48;
-    t15 = t22 - r12;
-    if (t15 >= invalid) {
+    t19 = &*(uintptr_t*)(rsi+0x1);
+    *(uintptr_t*)(rsi+0x0) = 48;
+    t3 = t19;
+    t17 = t19;
+    t5 = t19 - r12;
+    t23 = t5;
+    if (t5 >= invalid) {
     }
 }
 
@@ -2314,65 +2643,67 @@ void __pformat_int_isra_0(int param_1) {
     int32_t rcx;
     int32_t r14;
 
-    t1 = rsp - 40;
-    t2 = &[rsp+0x20];
-    t3 = [rdx+0x10];
-    t4 = [rdx+0x8];
-    /* compare t3 vs t3 */
-    t5 = t3 + 23;
+    t1 = &*(uintptr_t*)(rsp+0x20);
+    t2 = 0;
+    t3 = *(uintptr_t*)(rdx+0x10);
+    t4 = *(uintptr_t*)(rdx+0x8);
+    t5 = t3;
+    t6 = t3 + 23;
     if (t4 == 0) {
     }
-    t6 = [rbx+0xC];
-    /* compare t6 vs rax */
-    t7 = (signed)t6;
-    t5 = t7 + 15;
-    t8 = t5 & -16;
+    t7 = *(uintptr_t*)(rbx+0xC);
+    t2 = t7;
+    t5 = (signed)t7;
+    t6 = t5 + 15;
+    t8 = t6 & -16;
     ___chkstk_ms();
-    t1 = rsp - t8;
-    t9 = &[rsp+0x20];
-    /* compare invalid vs -128 */
+    t9 = &*(uintptr_t*)(rsp+0x20);
     if (rcx == 0) {
     }
-    t14 = (signed)invalid;
-    t12 = r13 + t14;
-    memset();
-    /* compare r12 vs t12 */
-    t17 = (flags_ZF != 0);
-    /* compare invalid vs invalid */
+    t15 = (signed)invalid;
+    t18 = r13;
+    t14 = 48;
+    t10 = t15;
+    t13 = r13 + t15;
+    memset(r13, 48, r15_0, -3689348814741910323);
+    t2 = (flags_ZF != 0);
     if (rsi != 0) {
     }
     if (invalid == 0) {
     }
-    t13 = rax;
-    t17 = rax - 1;
-    [rbx+0xC] = t17;
-    if (t13 != 0) {
+    t2 = *(uintptr_t*)(rbx+0xC);
+    t14 = rax;
+    t2 = rax - 1;
+    *(uintptr_t*)(rbx+0xC) = t2;
+    if (t14 != 0) {
     }
-    t1 = &arg_8;
-    t21 = stack_pop();
-    t6 = stack_pop();
+    t23 = &arg_8;
+    t24 = stack_pop();
+    t7 = stack_pop();
     t4 = stack_pop();
     t9 = stack_pop();
-    t12 = stack_pop();
-    t22 = stack_pop();
-    t14 = stack_pop();
-    t2 = stack_pop();
+    t13 = stack_pop();
+    t25 = stack_pop();
+    t15 = stack_pop();
     if (rax != 0) {
     }
     if (rcx < 0) {
     }
     t10 = r12;
-    t11 = rdi & 4096;
+    t11 = -3689348814741910323;
+    t12 = rdi & 4096;
     if (r12 == t10) {
     }
-    t12 = &[r8+0x1];
-    t7 = rcx / r9;
-    t13 = (unsigned)rdx >> 0x3;
-    t14 = &[rdx+0x0];
-    t15 = t14 + t14;
-    t8 = rcx - t15;
-    t16 = t8 + 48;
-    [r8+0x0] = t16;
+    t2 = rcx;
+    t13 = &*(uintptr_t*)(r8+0x1);
+    t5 = rcx / r9;
+    t6 = rcx;
+    t14 = (unsigned)rdx >> 0x3;
+    t15 = &*(uintptr_t*)(rdx+0x0);
+    t16 = t15 + t15;
+    t8 = rcx - t16;
+    t17 = t8 + 48;
+    *(uintptr_t*)(r8+0x0) = t17;
     if ((unsigned)rcx <= (unsigned)9) {
     }
     if (invalid != 0) {
@@ -2400,21 +2731,22 @@ void __pformat_emit_radix_point(void) {
     int32_t var_8;
     int32_t var_A;
 
-    t1 = rsp - 48;
-    t2 = &[rsp+0x30];
+    t1 = &*(uintptr_t*)(rsp+0x30);
     if ([rcx+0x14] == -3) {
     }
-    t4 = (signed)[rbx+0x14];
-    t5 = t4 + 15;
+    t3 = (signed)*(uintptr_t*)(rbx+0x14);
+    t4 = rsp;
+    t5 = t3 + 15;
     t6 = t5 & -16;
     ___chkstk_ms();
-    t1 = rsp - t6;
-    t7 = &var_8;
+    t7 = &0;
     var_8 = 0;
-    t8 = &[rsp+0x20];
-    wcrtomb();
-    /* compare t6 vs t6 */
-    __pformat_putc();
+    t8 = &*(uintptr_t*)(rsp+0x20);
+    t9 = t8;
+    wcrtomb(rsi_0, *(uintptr_t*)(rcx+0x18), var_8);
+    t2 = rbx;
+    t9 = 46;
+    __pformat_putc(46, rbx);
     if (? != 0) {
     }
 }
@@ -2437,36 +2769,36 @@ void __pformat_emit_float(void) {
     uint64_t r8;
     int32_t r12;
 
-    t1 = rsp - 32;
-    t2 = &[rsp+0x20];
+    t1 = &*(uintptr_t*)(rsp+0x20);
+    t2 = *(uintptr_t*)(r9+0xC);
     t3 = rcx;
+    t4 = rdx;
+    t5 = t3;
     if (t3 != 0) {
     }
-    t5 = rax - rdx;
-    [rbx+0xC] = t5;
+    t2 = rax - rdx;
+    *(uintptr_t*)(rbx+0xC) = t2;
     if (rdx != 0) {
     }
-    t5 = rax - 1;
-    [rbx+0xC] = t5;
+    t2 = rax - 1;
+    *(uintptr_t*)(rbx+0xC) = t2;
     if (rsi != 0) {
     }
     if (rax != 0) {
     }
     if (invalid != 0) {
     }
-    t5 = [rbx+0xC];
-    if (t5 != 0) {
+    t2 = *(uintptr_t*)(rbx+0xC);
+    if (t2 != 0) {
     }
     if (rsi != 0) {
     }
-    t5 = rax - 1;
-    [rbx+0x10] = t5;
-    t1 = rsp + 32;
-    t10 = stack_pop();
-    t9 = stack_pop();
-    t8 = stack_pop();
-    t11 = stack_pop();
-    t2 = stack_pop();
+    t2 = rax - 1;
+    *(uintptr_t*)(rbx+0x10) = t2;
+    t12 = stack_pop();
+    t5 = stack_pop();
+    t4 = stack_pop();
+    t13 = stack_pop();
 }
 
 /* ═══════════════════════════════════════════════════
@@ -2486,19 +2818,18 @@ void __pformat_emit_efloat(void) {
     int32_t rdi;
     int32_t rdx;
 
-    t1 = rsp - 40;
-    t2 = &[rsp+0x20];
-    t3 = 1 - 1;
-    t4 = rcx;
-    t5 = (signed)t4;
-    t6 = (signed)t4 >> 0x1F;
-    t7 = rcx * 1717986919;
-    t8 = (signed)t7 >> 0x22;
-    t9 = t8 - t6;
+    t1 = &*(uintptr_t*)(rsp+0x20);
+    t2 = 1 - 1;
+    t3 = rcx;
+    t4 = (signed)t3;
+    t5 = (signed)t3 >> 0x1F;
+    t6 = rcx * 1717986919;
+    t7 = (signed)t6 >> 0x22;
+    t8 = t7 - t5;
     if ( == ) {
     }
-    t10 = [rbx+0x2C];
-    if (t10 != -1) {
+    t9 = *(uintptr_t*)(rbx+0x2C);
+    if (t9 != -1) {
     }
     return;
 }
@@ -2523,18 +2854,19 @@ void __pformat_efloat(void) {
     int32_t var_20;
     int32_t var_4;
 
-    t1 = rsp - 80;
-    t2 = &[rsp+0x50];
-    t3 = [rdx+0x10];
-    /* asm: fld [rcx+0x0] */;
-    if (t3 < 0) {
+    t1 = &*(uintptr_t*)(rsp+0x50);
+    t2 = *(uintptr_t*)(rdx+0x10);
+    /* asm: fld *(uintptr_t*)(rcx+0x0) */;
+    if (t2 < 0) {
     }
-    __pformat_emit_efloat();
-    __freedtoa();
-    t1 = rsp + 80;
+    t5 = var_8;
+    t7 = rbx;
+    t4 = rax;
+    __pformat_emit_efloat(var_8, rax);
+    t10 = rsi;
+    __freedtoa(rsi, 6);
+    t11 = stack_pop();
     t9 = stack_pop();
-    t10 = stack_pop();
-    t2 = stack_pop();
     return;
     if (? != 0) {
     }
@@ -2560,13 +2892,16 @@ void __pformat_float(void) {
     int32_t var_20;
     int32_t var_4;
 
-    t1 = rsp - 80;
-    t2 = &[rsp+0x50];
-    t3 = [rdx+0x10];
-    /* asm: fld [rcx+0x0] */;
-    if (t3 >= 0) {
+    t1 = &*(uintptr_t*)(rsp+0x50);
+    t2 = *(uintptr_t*)(rdx+0x10);
+    /* asm: fld *(uintptr_t*)(rcx+0x0) */;
+    if (t2 >= 0) {
     }
-    __pformat_emit_float();
+    t5 = var_8;
+    t4 = rax;
+    t7 = rbx;
+    __pformat_emit_float(var_8, rax);
+    t3 = *(uintptr_t*)(rbx+0xC);
     if (? != 0) {
     }
 }
@@ -2592,20 +2927,23 @@ void __pformat_gfloat(void) {
     int32_t var_20;
     int32_t var_4;
 
-    t1 = rsp - 88;
-    t2 = &[rsp+0x50];
-    t3 = [rdx+0x10];
-    /* asm: fld [rcx+0x0] */;
-    if (t3 < 0) {
+    t1 = &*(uintptr_t*)(rsp+0x50);
+    t2 = *(uintptr_t*)(rdx+0x10);
+    /* asm: fld *(uintptr_t*)(rcx+0x0) */;
+    if (t2 < 0) {
     }
-    t4 = &var_8;
-    t5 = &var_20;
+    t3 = &var_8;
+    t4 = &var_20;
+    t5 = 2;
     /* asm: t6 */;
     t7 = &var_4;
-    [rsp+0x20] = t4;
-    t8 = __pformat_cvt();
-    /* compare t8 vs -32768 */
-    __pformat_emit_inf_or_nan();
+    *(uintptr_t*)(rsp+0x20) = t3;
+    t8 = __pformat_cvt(2, var_20);
+    t9 = t3;
+    t5 = var_8;
+    t17 = rbx;
+    t4 = rax;
+    __pformat_emit_inf_or_nan(var_8, rax, rbx);
     if (? != 0) {
     }
 }
@@ -2642,65 +2980,72 @@ void __pformat_emit_xfloat_isra_0(void) {
     int32_t var_C;
     int32_t var_4;
 
-    t1 = rsp - 80;
-    t2 = &[rsp+0x50];
+    t1 = &*(uintptr_t*)(rsp+0x50);
+    t2 = rcx;
+    t3 = rdx;
     if (rdx != 0) {
     }
-    t3 = &[rax-0x3];
-    if ((unsigned)t3 <= (unsigned)14) {
+    t4 = &*(uintptr_t*)(rax-0x3);
+    if ((unsigned)t4 <= (unsigned)14) {
     }
-    t3 = [rbx+0x8];
-    t5 = &var_20;
-    if (t3 == 0) {
+    t4 = *(uintptr_t*)(rbx+0x8);
+    t7 = &-8589934593;
+    t3 = t7;
+    if (t4 == 0) {
     }
-    t12 = [rbx+0x10];
-    t10 = (signed)invalid;
-    t24 = (signed)invalid;
-    t15 = rsi - rdi;
-    t3 = &[rdx+0x0];
-    /* compare t12 vs t12 */
-    t18 = t3 & 448;
-    t22 = sbb(ecx, -6);
-    t25 = t24 * 1717986919;
-    t13 = (signed)t10 >> 0x1F;
-    t26 = (signed)t25 >> 0x22;
-    t27 = t22 - t13;
-    if (t18 == 1) {
+    t6 = *(uintptr_t*)(rbx+0x10);
+    t13 = rsi;
+    t3 = (signed)invalid;
+    t25 = (signed)invalid;
+    t14 = rsi - rdi;
+    t4 = &*(uintptr_t*)(rdx+0x0);
+    t16 = t4;
+    t15 = t4;
+    t17 = t4 & 448;
+    t18 = sbb(ecx, -6);
+    t26 = t25 * 1717986919;
+    t12 = (signed)t3 >> 0x1F;
+    t22 = (signed)t26 >> 0x22;
+    t27 = t18 - t12;
+    if (t17 == 1) {
     }
-    t3 = invalid - invalid;
-    if (t3 != 0) {
+    t4 = invalid - invalid;
+    if (t4 != 0) {
     }
     if (invalid != 0) {
     }
-    __pformat_putc();
-    t15 = [rbx+0x8];
-    t16 = t15 & 32;
-    t22 = t16 | 88;
-    __pformat_putc();
-    t10 = [rbx+0xC];
-    /* compare t10 vs t10 */
-    t23 = &(t10);
+    t6 = rbx;
+    t13 = 48;
+    __pformat_putc(48, rbx, r8_2, r9_0);
+    t14 = *(uintptr_t*)(rbx+0x8);
+    t16 = rbx;
+    t15 = t14 & 32;
+    t18 = t15 | 88;
+    __pformat_putc(rcx_3, rbx, r8_2, r9_0);
+    t3 = *(uintptr_t*)(rbx+0xC);
+    t23 = &t3;
     if ((unsigned)rdi < (unsigned)rsi) {
     }
-    t10 = [rbx+0x10];
-    t12 = &[rax-0x1];
-    [rbx+0x10] = t12;
-    if (t10 != 0) {
+    t3 = *(uintptr_t*)(rbx+0x10);
+    t6 = &*(uintptr_t*)(rax-0x1);
+    *(uintptr_t*)(rbx+0x10) = t6;
+    if (t3 != 0) {
     }
-    t14 = [rbx+0x8];
-    t15 = t14 & 32;
-    t16 = t15 | 80;
-    __pformat_putc();
-    [rbx+0xC] = [rbx+0xC] + invalid;
-    [rbx+0x8] = [rbx+0x8] | 448;
-    t1 = rsp + 80;
+    t13 = *(uintptr_t*)(rbx+0x8);
+    t6 = rbx;
+    t14 = t13 & 32;
+    t15 = t14 | 80;
+    __pformat_putc(rcx_2, rbx, r8_2, r9_0);
+    *(uintptr_t*)(rbx+0xC) = *(uintptr_t*)(rbx+0xC) + invalid;
+    t16 = rbx;
+    t18 = r12;
+    *(uintptr_t*)(rbx+0x8) = *(uintptr_t*)(rbx+0x8) | 448;
     t30 = stack_pop();
-    t9 = stack_pop();
+    t8 = stack_pop();
+    t7 = stack_pop();
     t5 = stack_pop();
-    t4 = stack_pop();
     t31 = stack_pop();
     t23 = stack_pop();
-    t2 = stack_pop();
     if (? != 0) {
     }
     return;
@@ -2737,7 +3082,6 @@ void __mingw_pformat(void) {
     int32_t var_14;
     int32_t var_C;
     int32_t var_4;
-    int32_t var_6C;
     int32_t var_68;
     int32_t var_40;
     int32_t var_60;
@@ -2747,47 +3091,49 @@ void __mingw_pformat(void) {
     int32_t var_70;
     int32_t var_42;
 
-    t1 = rsp - 184;
-    t2 = &[rsp+0xB0];
+    t1 = &*(uintptr_t*)(rsp+0xB0);
+    t2 = rcx;
+    t3 = r9;
     _errno();
-    t3 = rcx & 24576;
+    t4 = rcx & 24576;
+    t5 = 0;
+    t6 = -8589934593;
     var_18 = 0;
-    t4 = &[rsi+0x1];
+    t7 = *(uintptr_t*)(rax+0x0);
+    t8 = &*(uintptr_t*)(rsi+0x1);
     var_20 = -8589934593;
+    t9 = 0;
     var_10 = 0;
-    t5 = (signed)[rsi+0x0];
+    t10 = (signed)*(uintptr_t*)(rsi+0x0);
     var_30 = rdx;
-    var_28 = t3;
+    var_28 = t4;
+    t11 = t10;
     var_24 = -1;
     var_14 = 0;
     var_C = 0;
     var_4 = -1;
-    /* compare t5 vs t5 */
-    t1 = rsp + 184;
-    t15 = stack_pop();
-    t6 = stack_pop();
-    t16 = stack_pop();
-    t12 = stack_pop();
-    t7 = stack_pop();
-    t17 = stack_pop();
-    t10 = stack_pop();
+    t7 = rcx;
+    t18 = stack_pop();
+    t3 = stack_pop();
     t2 = stack_pop();
-    t6 = &var_24;
-    var_6C = rax;
-    t7 = &*(DWORD*)0x140009369;
-    var_68 = t6;
+    t15 = stack_pop();
+    t12 = stack_pop();
+    t19 = stack_pop();
+    t14 = stack_pop();
+    t3 = &var_24;
+    t12 = &*(DWORD*)0x140009369;
+    var_68 = t3;
     if (rcx != 37) {
     }
-    t11 = var_C;
-    t1 = rsp + 184;
-    t15 = stack_pop();
-    t6 = stack_pop();
-    t16 = stack_pop();
-    t12 = stack_pop();
-    t7 = stack_pop();
-    t17 = stack_pop();
-    t10 = stack_pop();
+    t6 = t3;
+    t7 = t6;
+    t18 = stack_pop();
+    t3 = stack_pop();
     t2 = stack_pop();
+    t15 = stack_pop();
+    t12 = stack_pop();
+    t19 = stack_pop();
+    t14 = stack_pop();
 }
 
 /* ═══════════════════════════════════════════════════
@@ -2803,16 +3149,14 @@ void __rv_alloc_D2A(void) {
     int32_t rdx;
     int32_t rcx;
 
-    t1 = rsp - 40;
-    t2 = &[rsp+0x20];
+    t1 = &*(uintptr_t*)(rsp+0x20);
     if (rcx <= 27) {
     }
-    __Balloc_D2A();
-    [rax+0x0] = rbx;
-    t6 = rax + 4;
-    t1 = rsp + 40;
+    t6 = rbx;
+    __Balloc_D2A(rbx, *(uintptr_t*)(rax+0x17));
+    *(uintptr_t*)(rax+0x0) = rbx;
+    t2 = rax + 4;
     t4 = stack_pop();
-    t2 = stack_pop();
 }
 
 /* ═══════════════════════════════════════════════════
@@ -2833,24 +3177,26 @@ void __nrv_alloc_D2A(void) {
     double xmm0;
     double xmm1;
 
-    t1 = rsp - 40;
-    t2 = &[rsp+0x20];
+    t1 = &*(uintptr_t*)(rsp+0x20);
+    t2 = rcx;
+    t3 = rdx;
     if (invalid <= 27) {
     }
-    __Balloc_D2A();
-    t5 = &[rdi+0x1];
-    [rax+0x0] = rbx;
-    t8 = (unsigned)[rdi+0x0];
-    t9 = &[rax+0x4];
-    [rax+0x4] = t8;
-    /* compare t8 vs t8 */
+    t9 = rbx;
+    __Balloc_D2A(rbx, *(uintptr_t*)(rax+0x17));
+    t7 = &*(uintptr_t*)(rdi+0x1);
+    *(uintptr_t*)(rax+0x0) = rbx;
+    t11 = (unsigned)*(uintptr_t*)(rdi+0x0);
+    t12 = &*(uintptr_t*)(rax+0x4);
+    *(uintptr_t*)(rax+0x4) = t11;
+    t4 = t12;
     if (rsi == 0) {
     }
-    t10 = (unsigned)[rdx+0x0];
-    t6 = rax + 1;
-    t5 = rdx + 1;
-    [rax+0x0] = t10;
-    if (t10 != 0) {
+    t9 = (unsigned)*(uintptr_t*)(rdx+0x0);
+    t4 = rax + 1;
+    t7 = rdx + 1;
+    *(uintptr_t*)(rax+0x0) = t9;
+    if (t9 != 0) {
     }
 }
 
@@ -2871,11 +3217,15 @@ void __freedtoa(void) {
     int32_t r13;
     int32_t r11;
 
-    t1 = [rcx-0x4];
-    t2 = 1 << t1;
-    t3 = &[rax-0x4];
+    t1 = 1;
+    t2 = rcx;
+    t3 = *(uintptr_t*)(rcx-0x4);
+    t4 = 1 << t3;
+    t5 = t3;
+    t6 = &*(uintptr_t*)(rax-0x4);
+    t7 = t4;
     /* asm: punpckldq xmm0 xmm1 */;
-    [rax+0x4] = t1;
+    *(uintptr_t*)(rax+0x4) = t3;
     return;
 }
 
@@ -2910,9 +3260,9 @@ void __quorem_D2A(int param_1, int param_2, int param_3, int param_4) {
     int32_t var_18;
     int32_t var_20;
 
-    t1 = rsp - 56;
-    t2 = &[rsp+0x30];
-    t3 = [rdx+0x14];
+    t1 = &*(uintptr_t*)(rsp+0x30);
+    t2 = 0;
+    t3 = *(uintptr_t*)(rdx+0x14);
     if ([rcx+0x14] < t3) {
     }
 }
@@ -2948,6 +3298,7 @@ void __gdtoa(int param_1, int param_2, int param_3, int param_4) {
     int32_t var_28;
     int32_t var_30;
     int32_t var_34;
+    int32_t var_18;
     int32_t var_20;
     int32_t var_40;
     int32_t var_4;
@@ -2967,21 +3318,24 @@ void __gdtoa(int param_1, int param_2, int param_3, int param_4) {
     int32_t var_60;
     int32_t var_38;
 
-    t1 = rsp - 200;
-    t2 = &[rsp+0xC0];
-    t3 = arg_70;
-    t4 = [r9+0x0];
-    var_28 = t3;
-    t5 = arg_78;
+    t1 = &*(uintptr_t*)(rsp+0xC0);
+    t2 = arg_70;
+    t3 = *(uintptr_t*)(r9+0x0);
+    var_28 = t2;
+    t4 = arg_78;
+    t5 = r8;
     var_30 = rdx;
-    var_34 = t5;
+    var_34 = t4;
     t6 = arg_80;
+    var_18 = t6;
     t7 = arg_88;
     var_20 = t7;
-    t8 = t4 & -49;
-    [r9+0x0] = t8;
-    t9 = t4 & 7;
-    if (t9 == 3) {
+    t8 = t3;
+    t9 = t3 & -49;
+    *(uintptr_t*)(r9+0x0) = t9;
+    t10 = t3;
+    t11 = t3 & 7;
+    if (t11 == 3) {
     }
 }
 
@@ -3005,19 +3359,18 @@ void __rshift_D2A(void) {
     uint64_t r8;
     int32_t rax;
 
-    t1 = &[rsp+0x0];
-    t2 = (signed)[rcx+0x14];
+    t1 = &*(uintptr_t*)(rsp+0x0);
+    t2 = (signed)*(uintptr_t*)(rcx+0x14);
     t3 = (signed)rdx >> 0x5;
     if (t2 > t3) {
     }
-    [r10+0x14] = 0;
-    [r10+0x18] = 0;
+    *(uintptr_t*)(r10+0x14) = 0;
+    *(uintptr_t*)(r10+0x18) = 0;
     t2 = stack_pop();
     t4 = stack_pop();
     t5 = stack_pop();
     t6 = stack_pop();
     t7 = stack_pop();
-    t1 = stack_pop();
 }
 
 /* ═══════════════════════════════════════════════════
@@ -3034,11 +3387,13 @@ void __trailz_D2A(void) {
     int32_t rbp;
     int32_t rsi;
 
-    t1 = (signed)[rcx+0x14];
-    t2 = &[rcx+0x18];
-    t3 = &[rax+0x0];
+    t1 = (signed)*(uintptr_t*)(rcx+0x14);
+    t2 = &*(uintptr_t*)(rcx+0x18);
+    t3 = &*(uintptr_t*)(rax+0x0);
+    t4 = 0;
     if ((unsigned)t2 < (unsigned)t3) {
     }
+    t2 = rdx;
 }
 
 /* ═══════════════════════════════════════════════════
@@ -3055,20 +3410,19 @@ void dtoa_lock(void) {
     int32_t rcx;
     int32_t rdi;
 
-    t1 = rsp - 40;
-    t2 = &[rsp+0x20];
-    t3 = *(DWORD*)0x14000CAEA;
-    if (t3 == 2) {
+    t1 = &*(uintptr_t*)(rsp+0x20);
+    t2 = t7;
+    t3 = rcx;
+    if (t2 == 2) {
     }
     t4 = &*(DWORD*)0x14000CAF9;
+    t5 = rsi;
     t8 = 0 - rsi;
-    t9 = t8 & 40;
-    t15 = t9 + rbx;
-    t1 = rsp + 40;
+    t10 = t8 & 40;
+    t11 = t10 + rbx;
     t4 = stack_pop();
-    t5 = stack_pop();
+    t3 = stack_pop();
     t6 = stack_pop();
-    t2 = stack_pop();
 }
 
 /* ═══════════════════════════════════════════════════
@@ -3087,36 +3441,33 @@ void __Balloc_D2A(void) {
     int32_t rsi;
     int32_t var_8;
 
-    t1 = rsp - 48;
-    t2 = &[rsp+0x30];
-    t3 = rcx;
-    dtoa_lock();
-    /* compare t3 vs 9 */
-    t8 = 1 << rbx;
-    t6 = &[rsi-0x1];
-    t9 = (signed)t6;
-    t10 = &[invalid+0x27];
-    t11 = (unsigned)t10 >> 0x3;
-    t12 = t11 << 0x3;
-    malloc();
-    /* compare t9 vs t9 */
-    t1 = rsp + 48;
-    t3 = stack_pop();
-    t13 = stack_pop();
+    t1 = &*(uintptr_t*)(rsp+0x30);
+    t2 = rcx;
+    t3 = 0;
+    dtoa_lock(0);
+    t3 = rbx;
+    t8 = 1;
+    t9 = 1 << rbx;
+    t5 = &*(uintptr_t*)(rsi-0x1);
+    t10 = (signed)t5;
+    t11 = &*(uintptr_t*)(invalid+0x27);
+    t12 = (unsigned)t11 >> 0x3;
+    t13 = t12;
+    t14 = t12 << 0x3;
+    malloc(rcx_4);
     t2 = stack_pop();
-    [rax+0x8] = rbx;
-    [rax+0xC] = rsi;
+    t8 = stack_pop();
+    *(uintptr_t*)(rax+0x8) = rbx;
+    *(uintptr_t*)(rax+0xC) = rsi;
     if (gvar_14000CAE9 == 2) {
     }
-    [rax+0x10] = 0;
-    t1 = rsp + 48;
-    t3 = stack_pop();
-    t13 = stack_pop();
+    *(uintptr_t*)(rax+0x10) = 0;
     t2 = stack_pop();
+    t8 = stack_pop();
     t4 = &*(DWORD*)0x14000CA99;
-    t5 = (signed)rbx;
-    t6 = [rdx+0x0];
-    if (t6 == 0) {
+    t3 = (signed)rbx;
+    t5 = *(uintptr_t*)(rdx+0x0);
+    if (t5 == 0) {
     }
 }
 
@@ -3135,12 +3486,9 @@ void __Bfree_D2A(void) {
     int32_t rdi;
     int32_t rsi;
 
-    t1 = rsp - 40;
-    t2 = &[rsp+0x20];
+    t1 = &*(uintptr_t*)(rsp+0x20);
     if (rcx == 0) {
     }
-    t1 = rsp + 40;
-    t3 = stack_pop();
     t2 = stack_pop();
 }
 
@@ -3161,27 +3509,27 @@ void __multadd_D2A(void) {
     int32_t r12;
     uint64_t r8;
 
-    t1 = rsp - 32;
-    t2 = &[rsp+0x20];
-    t3 = [rcx+0x14];
-    t4 = (signed)invalid;
-    t5 = (signed)rdx;
-    t6 = [rbx+0x18];
-    t7 = t6 * t5;
-    t8 = t7 + t4;
-    [rbx+0x18] = t8;
-    t9 = 0 + 1;
-    t10 = (unsigned)t8 >> 0x20;
-    if (t3 > t9) {
+    t1 = &*(uintptr_t*)(rsp+0x20);
+    t2 = *(uintptr_t*)(rcx+0x14);
+    t3 = (signed)invalid;
+    t4 = (signed)rdx;
+    t5 = 0;
+    t6 = *(uintptr_t*)(rbx+0x18);
+    t7 = t6 * t4;
+    t8 = t7 + t3;
+    *(uintptr_t*)(rbx+0x18) = t8;
+    t9 = t8;
+    t10 = 0 + 1;
+    t11 = (unsigned)t8 >> 0x20;
+    if (t2 > t10) {
     }
     if (rsi == 0) {
     }
-    t1 = rsp + 32;
-    t13 = stack_pop();
-    t4 = stack_pop();
+    t6 = r12;
+    t12 = stack_pop();
     t3 = stack_pop();
-    t16 = stack_pop();
     t2 = stack_pop();
+    t15 = stack_pop();
 }
 
 /* ═══════════════════════════════════════════════════
@@ -3202,29 +3550,27 @@ void __i2b_D2A(void) {
     int32_t r15;
     int32_t var_8;
 
-    t1 = rsp - 56;
-    t2 = &[rsp+0x30];
-    dtoa_lock();
-    t3 = (t4);
-    /* compare t3 vs t3 */
-    t3 = *(DWORD*)0x140008059;
-    t6 = &*(DWORD*)0x14000C199;
-    t7 = t3 - t6;
-    t8 = (signed)t7 >> 0x3;
-    t9 = t8 + 5;
-    if ((unsigned)t9 <= (unsigned)288) {
+    t1 = &*(uintptr_t*)(rsp+0x30);
+    t2 = 0;
+    dtoa_lock(0);
+    t3 = t4;
+    t3 = t4;
+    t2 = &*(DWORD*)0x14000C199;
+    t4 = t3;
+    t6 = t3 - t2;
+    t7 = (signed)t6 >> 0x3;
+    t8 = t7 + 5;
+    if ((unsigned)t8 <= (unsigned)288) {
     }
     t4 = *(DWORD*)0x1400096C1;
-    [rax+0x8] = t4;
+    *(uintptr_t*)(rax+0x8) = t4;
     if (gvar_14000CAE9 != 2) {
     }
     t4 = *(DWORD*)0x1400096C9;
-    [rax+0x18] = rbx;
-    [rax+0x10] = t4;
-    t1 = rsp + 56;
+    *(uintptr_t*)(rax+0x18) = rbx;
+    *(uintptr_t*)(rax+0x10) = t4;
     t5 = stack_pop();
-    t2 = stack_pop();
-    t4 = [rax+0x0];
+    t4 = *(uintptr_t*)(rax+0x0);
     if (gvar_14000CAE9 == 2) {
     }
 }
@@ -3252,55 +3598,53 @@ void __mult_D2A(int param_1) {
     int32_t r11;
     int32_t r10;
     int32_t invalid;
-    int32_t var_8;
 
-    t1 = rsp - 56;
-    t2 = &[rsp+0x30];
-    t3 = (signed)[rcx+0x14];
-    t4 = (signed)[rdx+0x14];
+    t1 = &*(uintptr_t*)(rsp+0x30);
+    t2 = (signed)*(uintptr_t*)(rcx+0x14);
+    t3 = (signed)*(uintptr_t*)(rdx+0x14);
+    t4 = rcx;
     if (invalid < invalid) {
     }
     t6 = rcx + 1;
     arg_50 = r9;
-    __Balloc_D2A();
-    /* compare rax vs rax */
-    t1 = rsp + 56;
-    t5 = stack_pop();
-    t9 = stack_pop();
-    t23 = stack_pop();
+    t8 = __Balloc_D2A(rcx);
+    t5 = rdi;
     t7 = stack_pop();
-    t4 = stack_pop();
+    t11 = stack_pop();
+    t8 = stack_pop();
+    t10 = stack_pop();
     t3 = stack_pop();
-    t24 = stack_pop();
     t2 = stack_pop();
-    t7 = &[rax+0x18];
-    t8 = (signed)rbx;
-    t9 = &[r12+0x0];
-    if ((unsigned)t7 >= (unsigned)t9) {
+    t27 = stack_pop();
+    t10 = &*(uintptr_t*)(rax+0x18);
+    t5 = (signed)rbx;
+    t4 = r9;
+    t11 = &*(uintptr_t*)(r12+0x0);
+    if ((unsigned)t10 >= (unsigned)t11) {
     }
-    t17 = &[r15+0x19];
-    t10 = r13 - r15;
-    t11 = t10 - 25;
-    t12 = (unsigned)t11 >> 0x2;
-    /* compare r13 vs t17 */
-    t18 = &[invalid+0x4];
-    var_8 = t18;
-    t19 = [r9+0x0];
-    t14 = r9 + 4;
-    if (t19 == 0) {
+    t5 = r13;
+    t20 = &*(uintptr_t*)(r15+0x19);
+    t13 = r13 - r15;
+    t14 = t13 - 25;
+    t15 = (unsigned)t14 >> 0x2;
+    t12 = &*(uintptr_t*)(invalid+0x4);
+    t21 = 4;
+    t22 = t12;
+    t23 = *(uintptr_t*)(r9+0x0);
+    t4 = r9 + 4;
+    if (t23 == 0) {
     }
     if (rbx != 0) {
     }
-    [rdi+0x14] = rbx;
-    t1 = rsp + 56;
-    t5 = stack_pop();
-    t9 = stack_pop();
-    t23 = stack_pop();
+    *(uintptr_t*)(rdi+0x14) = rbx;
+    t5 = rdi;
     t7 = stack_pop();
-    t4 = stack_pop();
+    t11 = stack_pop();
+    t8 = stack_pop();
+    t10 = stack_pop();
     t3 = stack_pop();
-    t24 = stack_pop();
     t2 = stack_pop();
+    t27 = stack_pop();
 }
 
 /* ═══════════════════════════════════════════════════
@@ -3321,20 +3665,20 @@ void __pow5mult_D2A(void) {
     int32_t invalid;
     int32_t r13;
 
-    t1 = rsp - 32;
-    t2 = &[rsp+0x20];
-    t3 = rdx & 3;
+    t1 = &*(uintptr_t*)(rsp+0x20);
+    t2 = rdx;
+    t3 = rcx;
+    t4 = rdx & 3;
     if ( != ) {
     }
-    t4 = (signed)rbx >> 0x2;
+    t5 = (signed)rbx >> 0x2;
     if ( == ) {
     }
-    t1 = rsp + 32;
-    t4 = stack_pop();
-    t6 = stack_pop();
+    t2 = r12;
     t5 = stack_pop();
-    t7 = stack_pop();
-    t2 = stack_pop();
+    t3 = stack_pop();
+    t6 = stack_pop();
+    t9 = stack_pop();
 }
 
 /* ═══════════════════════════════════════════════════
@@ -3359,47 +3703,52 @@ void __lshift_D2A(void) {
     int32_t r12;
     int32_t r14;
 
-    t1 = rsp - 40;
-    t2 = &[rsp+0x20];
-    t3 = [r13+0x14];
-    t4 = (signed)rdx >> 0x5;
-    t5 = [r13+0xC];
-    t6 = t3 + t4;
-    t7 = &[rbx+0x1];
-    if (t7 <= t5) {
+    t1 = &*(uintptr_t*)(rsp+0x20);
+    t2 = rdx;
+    t3 = *(uintptr_t*)(rcx+0x8);
+    t4 = *(uintptr_t*)(r13+0x14);
+    t5 = (signed)rdx >> 0x5;
+    t6 = *(uintptr_t*)(r13+0xC);
+    t7 = t4 + t5;
+    t8 = &*(uintptr_t*)(rbx+0x1);
+    if (t8 <= t6) {
     }
-    __Balloc_D2A();
-    /* compare rax vs rax */
-    t1 = rsp + 40;
-    t3 = stack_pop();
-    t10 = stack_pop();
-    t9 = stack_pop();
-    t23 = stack_pop();
-    t24 = stack_pop();
-    t25 = stack_pop();
-    t26 = stack_pop();
+    __Balloc_D2A(*(uintptr_t*)(rcx+0x8));
+    t6 = r15;
+    t4 = stack_pop();
     t2 = stack_pop();
-    t9 = &[rax+0x18];
+    t10 = stack_pop();
+    t26 = stack_pop();
+    t27 = stack_pop();
+    t28 = stack_pop();
+    t29 = stack_pop();
+    t10 = &*(uintptr_t*)(rax+0x18);
     if (rsi != 0) {
     }
-    t7 = 32 - 32;
-    t5 = [rsi+0x0];
-    t14 = rdi + 4;
-    t10 = rsi + 4;
-    t15 = t5 << t7;
-    t16 = t15 | 0;
-    [r9-0x4] = t16;
-    t17 = [rsi-0x4];
-    t18 = (unsigned)t17 >> t7;
-    if ((unsigned)t10 < (unsigned)r8) {
+    t15 = rdi;
+    t11 = 0;
+    t8 = 32 - 32;
+    t6 = *(uintptr_t*)(rsi+0x0);
+    t3 = t8;
+    t16 = rdi + 4;
+    t2 = rsi + 4;
+    t17 = t6 << t8;
+    t18 = t8;
+    t19 = t17 | 0;
+    *(uintptr_t*)(r9-0x4) = t19;
+    t20 = *(uintptr_t*)(rsi-0x4);
+    t21 = (unsigned)t20 >> t8;
+    if ((unsigned)t2 < (unsigned)r8) {
     }
-    t8 = &[r13+0x19];
-    t15 = r8 - r13;
-    t16 = t15 - 25;
-    t21 = (unsigned)t16 >> 0x2;
-    /* compare r8 vs t8 */
-    t22 = &[invalid+0x4];
-    [rdi+0x0] = rdx;
+    t6 = r8;
+    t3 = &*(uintptr_t*)(r13+0x19);
+    t17 = r8 - r13;
+    t19 = t17 - 25;
+    t22 = (unsigned)t19 >> 0x2;
+    t18 = 4;
+    t23 = &*(uintptr_t*)(invalid+0x4);
+    t24 = 4;
+    *(uintptr_t*)(rdi+0x0) = rdx;
     if (rdx != 0) {
     }
 }
@@ -3420,11 +3769,12 @@ void __cmp_D2A(void) {
     int32_t rbx;
     int32_t rsi;
 
-    t1 = (signed)[rdx+0x14];
-    t2 = [rcx+0x14];
+    t1 = (signed)*(uintptr_t*)(rdx+0x14);
+    t2 = *(uintptr_t*)(rcx+0x14);
     t3 = t2 - t1;
     if ( != ) {
     }
+    t1 = invalid;
 }
 
 /* ═══════════════════════════════════════════════════
@@ -3450,66 +3800,68 @@ void __diff_D2A(void) {
     int32_t invalid;
     int32_t r14;
 
-    t1 = rsp - 32;
-    t2 = &[rsp+0x20];
-    t3 = (signed)[rdx+0x14];
-    if ([rcx+0x14] != t3) {
+    t1 = &*(uintptr_t*)(rsp+0x20);
+    t2 = (signed)*(uintptr_t*)(rdx+0x14);
+    t3 = rdx;
+    if ([rcx+0x14] != t2) {
     }
-    __Balloc_D2A();
-    /* compare rax vs rax */
-    t1 = rsp + 32;
-    t24 = stack_pop();
+    t5 = *(uintptr_t*)(rsi+0x8);
+    t8 = __Balloc_D2A(*(uintptr_t*)(rsi+0x8), rdx);
+    t2 = r9;
     t27 = stack_pop();
+    t3 = stack_pop();
     t7 = stack_pop();
-    t9 = stack_pop();
-    t8 = stack_pop();
-    t21 = stack_pop();
-    t2 = stack_pop();
-    [rax+0x10] = rdi;
-    t3 = (signed)[rsi+0x14];
-    t8 = &[rsi+0x18];
-    t9 = &[r9+0x18];
-    t10 = &[r13+0x0];
-    t11 = (signed)[rbx+0x14];
-    t12 = &[rbx+0x18];
-    t7 = [rbx+0x0];
-    t13 = [rsi+0x0];
-    t14 = t13 - t7;
-    t15 = t14 - 0;
-    [r9+0x0] = t15;
-    t16 = 24 + 4;
-    t17 = (unsigned)t15 >> 0x20;
-    t18 = &[rcx+0x0];
-    t19 = t17 & 1;
-    if ((unsigned)t18 < (unsigned)t12) {
+    t11 = stack_pop();
+    t10 = stack_pop();
+    t24 = stack_pop();
+    *(uintptr_t*)(rax+0x10) = rdi;
+    t2 = (signed)*(uintptr_t*)(rsi+0x14);
+    t10 = &*(uintptr_t*)(rsi+0x18);
+    t11 = &*(uintptr_t*)(r9+0x18);
+    t5 = 24;
+    t4 = 0;
+    t12 = &*(uintptr_t*)(r13+0x0);
+    t13 = (signed)*(uintptr_t*)(rbx+0x14);
+    t14 = &*(uintptr_t*)(rbx+0x18);
+    t7 = *(uintptr_t*)(rbx+0x0);
+    t15 = *(uintptr_t*)(rsi+0x0);
+    t16 = t15 - t7;
+    t17 = t16 - 0;
+    *(uintptr_t*)(r9+0x0) = t17;
+    t6 = t17;
+    t18 = 24 + 4;
+    t19 = t17;
+    t20 = (unsigned)t17 >> 0x20;
+    t21 = &*(uintptr_t*)(rcx+0x0);
+    t22 = t20 & 1;
+    if ((unsigned)t21 < (unsigned)t14) {
     }
-    t3 = &[rbx+0x19];
+    t2 = &*(uintptr_t*)(rbx+0x19);
     t5 = 4;
-    /* compare r8 vs t3 */
-    t20 = (flags_CF == 0);
-    t12 = r8 - rbx;
-    t21 = &[r8-0x19];
-    t22 = (unsigned)t21 >> 0x2;
-    /* compare t20 vs t20 */
-    t11 = &[invalid+0x4];
-    t8 = r13 + t5;
-    t23 = &[r12+0x0];
-    if ((unsigned)t8 >= (unsigned)r11) {
+    t23 = (flags_CF == 0);
+    t14 = r8 - rbx;
+    t24 = &*(uintptr_t*)(r8-0x19);
+    t25 = (unsigned)t24 >> 0x2;
+    t13 = &*(uintptr_t*)(invalid+0x4);
+    t15 = 4;
+    t10 = r13 + t5;
+    t26 = &*(uintptr_t*)(r12+0x0);
+    t18 = t10;
+    if ((unsigned)t10 >= (unsigned)r11) {
     }
-    t4 = [rax-0x4];
-    t3 = rax - 4;
-    t20 = invalid - 1;
+    t4 = *(uintptr_t*)(rax-0x4);
+    t2 = rax - 4;
+    t23 = invalid - 1;
     if (t4 == 0) {
     }
-    [r9+0x14] = invalid;
-    t1 = rsp + 32;
-    t24 = stack_pop();
+    *(uintptr_t*)(r9+0x14) = invalid;
+    t2 = r9;
     t27 = stack_pop();
+    t3 = stack_pop();
     t7 = stack_pop();
-    t9 = stack_pop();
-    t8 = stack_pop();
-    t21 = stack_pop();
-    t2 = stack_pop();
+    t11 = stack_pop();
+    t10 = stack_pop();
+    t24 = stack_pop();
 }
 
 /* ═══════════════════════════════════════════════════
@@ -3532,17 +3884,18 @@ void __b2d_D2A(void) {
     int32_t rsp;
     double xmm6;
 
-    t1 = &[rsp+0x0];
-    t2 = (signed)[rcx+0x14];
-    t3 = &[rcx+0x18];
-    t4 = &[r11+0x0];
-    t5 = &[r10-0x4];
+    t1 = &*(uintptr_t*)(rsp+0x0);
+    t2 = (signed)*(uintptr_t*)(rcx+0x14);
+    t3 = &*(uintptr_t*)(rcx+0x18);
+    t4 = &*(uintptr_t*)(r11+0x0);
+    t5 = &*(uintptr_t*)(r10-0x4);
     t6 = bsr(invalid);
-    t7 = 32;
-    t8 = t6 ^ 31;
-    t9 = t7 - t8;
-    [rdx+0x0] = t9;
-    if (t8 <= 10) {
+    t7 = t6;
+    t8 = 32;
+    t9 = t6 ^ 31;
+    t10 = t8 - t9;
+    *(uintptr_t*)(rdx+0x0) = t10;
+    if (t9 <= 10) {
     }
 }
 
@@ -3556,8 +3909,10 @@ char* strnlen(void) {
     int32_t rax;
     uint64_t r8;
 
+    t1 = rcx;
     if (rdx != 0) {
     }
+    t1 = r8;
 }
 
 /* ═══════════════════════════════════════════════════
@@ -3570,6 +3925,7 @@ void wcsnlen(void) {
     int32_t rax;
     uint64_t r8;
 
+    t1 = rdx;
     if (rdx != 0) {
     }
 }
@@ -3582,6 +3938,8 @@ void __p__fmode(void) {
     /* local variables */
     int32_t rax;
 
+    t1 = *(DWORD*)0x140009769;
+    t2 = *(uintptr_t*)(rax+0x0);
 }
 
 /* ═══════════════════════════════════════════════════
@@ -3596,6 +3954,8 @@ void __p__commode(void) {
     int32_t rbx;
     int32_t rcx;
 
+    t1 = *(DWORD*)0x140009759;
+    t2 = *(uintptr_t*)(rax+0x0);
 }
 
 /* ═══════════════════════════════════════════════════
@@ -3611,26 +3971,23 @@ void _lock_file(void) {
     int32_t rdx;
     int32_t rax;
 
-    t1 = rsp - 40;
-    t2 = &[rsp+0x20];
-    t3 = rcx;
-    __acrt_iob_func();
-    /* compare t3 vs rax */
-    t4 = &[rbx+0x30];
-    t1 = rsp + 40;
-    t3 = stack_pop();
+    t1 = &*(uintptr_t*)(rsp+0x20);
+    t2 = rcx;
+    t3 = 0;
+    __acrt_iob_func(0);
+    t3 = &*(uintptr_t*)(rbx+0x30);
     t2 = stack_pop();
-    __acrt_iob_func();
-    /* compare rbx vs rax */
-    __acrt_iob_func();
-    t5 = rbx - rax;
-    t6 = (signed)t5 >> 0x4;
-    t7 = t6 * -1431655765;
-    t8 = &[rax+0x10];
-    _lock();
-    [rbx+0x18] = [rbx+0x18] | 32768;
-    t1 = rsp + 40;
-    t3 = stack_pop();
+    t3 = 19;
+    __acrt_iob_func(19);
+    t3 = 0;
+    t4 = __acrt_iob_func(0);
+    t5 = rbx;
+    t6 = rbx - rax;
+    t7 = (signed)t6 >> 0x4;
+    t8 = t7 * -1431655765;
+    t9 = &*(uintptr_t*)(rax+0x10);
+    _lock(*(uintptr_t*)(rax+0x10), rdx_0);
+    *(uintptr_t*)(rbx+0x18) = *(uintptr_t*)(rbx+0x18) | 32768;
     t2 = stack_pop();
     return;
     if (? != 0) {
@@ -3649,26 +4006,22 @@ void _unlock_file(void) {
     int32_t rcx;
     int32_t rax;
 
-    t1 = rsp - 40;
-    t2 = &[rsp+0x20];
-    t3 = rcx;
-    __acrt_iob_func();
-    /* compare t3 vs rax */
-    t4 = &[rbx+0x30];
-    t1 = rsp + 40;
-    t3 = stack_pop();
+    t1 = &*(uintptr_t*)(rsp+0x20);
+    t2 = rcx;
+    t3 = 0;
+    __acrt_iob_func(0);
+    t3 = &*(uintptr_t*)(rbx+0x30);
     t2 = stack_pop();
-    __acrt_iob_func();
-    /* compare rbx vs rax */
-    [rbx+0x18] = [rbx+0x18] & -32769;
-    __acrt_iob_func();
-    t3 = rbx - rax;
-    t5 = (signed)t3 >> 0x4;
-    t6 = t5 * -1431655765;
-    t7 = &[rbx+0x10];
-    t1 = rsp + 40;
-    t8 = stack_pop();
-    t2 = stack_pop();
+    t3 = 19;
+    __acrt_iob_func(19);
+    *(uintptr_t*)(rbx+0x18) = *(uintptr_t*)(rbx+0x18) & -32769;
+    t3 = 0;
+    __acrt_iob_func(0);
+    t2 = rbx - rax;
+    t4 = (signed)t2 >> 0x4;
+    t5 = t4 * -1431655765;
+    t6 = &*(uintptr_t*)(rbx+0x10);
+    t7 = stack_pop();
     if (? != 0) {
     }
 }
@@ -3686,7 +4039,8 @@ HANDLE mingw_set_invalid_parameter_handler(void) {
     int32_t rcx;
     int32_t rdx;
 
-    *(DWORD*)0x14000CB59 = t1;
+    t1 = rcx;
+    *(DWORD*)0x14000CB59 = t2;
 }
 
 /* ═══════════════════════════════════════════════════
@@ -3702,15 +4056,14 @@ void __acrt_iob_func(int param_1) {
     int32_t rdx;
     int32_t rax;
 
-    t1 = rsp - 40;
-    t2 = &[rsp+0x20];
+    t1 = &*(uintptr_t*)(rsp+0x20);
     __iob_func();
-    t3 = &[rcx+0x0];
+    t2 = rcx;
+    t3 = &*(uintptr_t*)(rcx+0x0);
     t4 = t3 << 0x4;
     t5 = rax + t4;
-    t6 = t1 + 40;
+    t6 = stack_pop();
     t7 = stack_pop();
-    t8 = stack_pop();
 }
 
 /* ═══════════════════════════════════════════════════
@@ -3732,14 +4085,14 @@ void __wcrtomb_cp(int param_1) {
     int32_t var_4;
     int32_t var_5;
 
-    t1 = rsp - 80;
+    t1 = rcx;
     arg_18 = rdx;
+    t2 = invalid;
     if (invalid != 0) {
     }
-    _errno();
-    [rax+0x0] = 42;
-    t1 = rsp + 80;
-    t2 = stack_pop();
+    _errno(invalid, var_4);
+    *(uintptr_t*)(rax+0x0) = 42;
+    t1 = -1;
 }
 
 /* ═══════════════════════════════════════════════════
@@ -3763,27 +4116,26 @@ void wcrtomb(void) {
     int32_t r14;
     int32_t var_5;
 
-    t1 = rsp - 56;
-    t2 = &[rsp+0x30];
-    /* compare rcx vs rcx */
-    t3 = &var_5;
-    ___mb_cur_max_func();
+    t1 = &*(uintptr_t*)(rsp+0x30);
+    t2 = &var_5;
+    t3 = rdx;
+    t4 = ___mb_cur_max_func();
     ___lc_codepage_func();
-    t4 = (unsigned)rdx;
-    __wcrtomb_cp();
-    t5 = (signed)t3;
-    t6 = t1 + 56;
-    t7 = stack_pop();
+    t5 = (unsigned)rdx;
+    t6 = t2;
+    __wcrtomb_cp(rax_0, rdx);
+    t7 = (signed)t2;
     t8 = stack_pop();
     t9 = stack_pop();
     t10 = stack_pop();
+    t11 = stack_pop();
 }
 
 /* ═══════════════════════════════════════════════════
  * __mbrtowc_cp @ 0x1400076A0 (USER)
  * Blocks: 26 | SSA vars: 23
  * ═══════════════════════════════════════════════════ */
-void __mbrtowc_cp(int param_1, int param_2, int param_3) {
+void __mbrtowc_cp(int param_1, int param_2) {
     /* local variables */
     int32_t rsp;
     int32_t rbp;
@@ -3801,8 +4153,8 @@ void __mbrtowc_cp(int param_1, int param_2, int param_3) {
     int32_t var_4;
     int32_t var_3;
 
-    t1 = rsp - 64;
-    t2 = &[rsp+0x40];
+    t1 = &*(uintptr_t*)(rsp+0x40);
+    t2 = rcx;
     if (rdx == 0) {
     }
 }
@@ -3830,27 +4182,29 @@ void mbrtowc(void) {
     int32_t r14;
     int32_t var_2;
 
-    t1 = rsp - 72;
-    t2 = &[rsp+0x40];
-    /* compare rcx vs rcx */
+    t1 = &*(uintptr_t*)(rsp+0x40);
+    t2 = 0;
     var_2 = 0;
-    t3 = &var_2;
+    t3 = &t2;
     t4 = r9;
+    t5 = rdx;
     ___mb_cur_max_func();
     ___lc_codepage_func();
-    /* compare t4 vs t4 */
-    [rsp+0x28] = t3;
-    [rsp+0x20] = t3;
-    t5 = &*(DWORD*)0x14000CB71;
-    __mbrtowc_cp();
-    t6 = (signed)t3;
-    t7 = t1 + 72;
-    t8 = stack_pop();
-    t9 = stack_pop();
-    t10 = stack_pop();
-    t11 = stack_pop();
+    *(uintptr_t*)(rsp+0x28) = t3;
+    t6 = r8;
+    *(uintptr_t*)(rsp+0x20) = t3;
+    t7 = &*(DWORD*)0x14000CB71;
+    t8 = rdx;
+    t9 = t3;
+    t10 = t4;
+    __mbrtowc_cp(rax_1, rdx, r8, rsi_0);
+    t11 = (signed)t3;
     t12 = stack_pop();
     t13 = stack_pop();
+    t14 = stack_pop();
+    t15 = stack_pop();
+    t16 = stack_pop();
+    t17 = stack_pop();
 }
 
 /* ═══════════════════════════════════════════════════

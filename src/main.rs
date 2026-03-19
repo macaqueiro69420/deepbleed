@@ -306,16 +306,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("╚══════════════════════════════════════════════════════╝");
 
     // ━━━ Write JSON ━━━
-    let base_output = if args.len() > 2 && args[2] == "--output" {
-        args.get(3).cloned().unwrap_or_else(|| path.clone())
+    let base_output = if args.contains(&"--output".to_string()) {
+        let idx = args.iter().position(|r| r == "--output").unwrap();
+        args.get(idx + 1).cloned().unwrap_or_else(|| path.clone())
     } else {
         path.clone()
     };
 
-    let json_path = format!("{}.ir.json", base_output);
-    let json_str = serde_json::to_string_pretty(&json_output)?;
-    std::fs::write(&json_path, &json_str)?;
-    println!("\n[*] IR JSON: {} ({} bytes)", json_path, json_str.len());
+    let skip_json = args.contains(&"--no-json".to_string());
+
+    if !skip_json {
+        let json_path = format!("{}.ir.json", base_output);
+        let json_str = serde_json::to_string_pretty(&json_output)?;
+        std::fs::write(&json_path, &json_str)?;
+        println!("\n[*] IR JSON: {} ({} bytes)", json_path, json_str.len());
+    } else {
+        println!("\n[*] Skipping IR JSON generation as requested.");
+    }
 
     // ━━━ PHASE 5: Generate C pseudocode (large-stack thread for deep recursion) ━━━
     println!("[*] PHASE 5: Generating C pseudocode (Parallel)...");

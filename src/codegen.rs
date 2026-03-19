@@ -99,8 +99,8 @@ pub fn generate_function_string(func: &JsonFunction, resolved: &ResolvedData, si
 
 pub fn generate_function(c: &mut String, func_in: &JsonFunction, resolved: &ResolvedData, sig_db: &SignatureDatabase) {
     let mut func_val = func_in.clone();
-    rename_ssa_vars(&mut func_val);
     prepare_calls(&mut func_val, resolved, sig_db);
+    rename_ssa_vars(&mut func_val);
     apply_expression_folding_c(&mut func_val, resolved);
     let func = &func_val;
 
@@ -245,17 +245,8 @@ fn emit_flat_block(c: &mut String, fb: &FlatBlock, ctx: &EmitCtx) {
             continue;
         }
 
-        // ── Skip pure CMP/TEST (already fused into conditions) ──
+        // ── Skip pure CMP/TEST (already fused into conditions or just setting flags for later, not C-like) ──
         if insn.op == "cmp" || insn.op == "test" {
-            // Emit as comment only when not followed by cond_jump
-            let next_is_branch = insns.get(i + 1)
-                .map(|nx| nx.op == "cond_jump")
-                .unwrap_or(false);
-            if !next_is_branch {
-                let lhs = resolve_operand_str(insn.src.get(0).map(|s| s.as_str()).unwrap_or("?"), ctx.resolved);
-                let rhs = resolve_operand_str(insn.src.get(1).map(|s| s.as_str()).unwrap_or("?"), ctx.resolved);
-                c.push_str(&format!("{}/* compare {} vs {} */\n", pad, lhs, rhs));
-            }
             i += 1;
             continue;
         }
@@ -315,7 +306,55 @@ fn collect_eax_before(insns: &[JsonInstruction], idx: usize) -> Option<String> {
     None
 }
 
-/// Look backwards for the last assignment to a specific register
+/// Heavy, CPU-frying global instruction backwards tracer for tracking argument definitions across CFG gaps
+fn find_reg_assign_global(
+    func: &JsonFunction,
+    start_block_id: &str,
+    local_insns: &[JsonInstruction],
+    start_idx: usize,
+    reg_name: &str,
+    preds: &std::collections::HashMap<&str, Vec<&str>>,
+) -> Option<String> {
+    // 1. Local search first
+    if let Some(val) = find_last_reg_assign(local_insns, start_idx, reg_name) {
+        return Some(val);
+    }
+    
+    // 2. Global backwards BFS
+    let mut queue = std::collections::VecDeque::new();
+    let mut visited = std::collections::HashSet::new();
+    
+    if let Some(p) = preds.get(start_block_id) {
+        for &from in p {
+            if visited.insert(from) {
+                queue.push_back(from);
+            }
+        }
+    }
+    
+    let mut iters = 0;
+    while let Some(curr_id) = queue.pop_front() {
+        iters += 1;
+        if iters > 10000 { break; } // Cap to avoid infinite loops, but high enough to be intense
+        
+        if let Some(blk) = func.blocks.iter().find(|b| b.id == curr_id) {
+            if let Some(val) = find_last_reg_assign(&blk.instructions, blk.instructions.len(), reg_name) {
+                return Some(val);
+            }
+        }
+        
+        if let Some(p) = preds.get(curr_id) {
+            for &from in p {
+                if visited.insert(from) {
+                    queue.push_back(from);
+                }
+            }
+        }
+    }
+    None
+}
+
+/// Look backwards for the last assignment to a specific register (locally)
 fn find_last_reg_assign(insns: &[JsonInstruction], idx: usize, reg_name: &str) -> Option<String> {
     for insn in insns[..idx].iter().rev() {
         if let Some(dst) = &insn.dst {
@@ -466,29 +505,71 @@ fn infer_var_type(reg: &str) -> &'static str {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 fn resolve_operand_str(s: &str, resolved: &ResolvedData) -> String {
-    // gvar_XXXXXXXX → try import/export/string
-    if let Some(hex) = s.strip_prefix("gvar_") {
-        if let Ok(addr) = u64::from_str_radix(hex, 16) {
-            if let Some(name) = resolved.resolve_addr(addr) {
-                return sanitize_c_ident(name);
-            }
-            if let Some(string) = resolved.resolve_string(addr) {
-                return format!("\"{}\"", escape_c_string(&truncate(string, 120)));
-            }
-        }
-        return format!("*(DWORD*)0x{}", hex);
+    let mut check_s = s;
+    let mut is_deref = false;
+    
+    if check_s.starts_with('[') && check_s.ends_with(']') {
+        check_s = &check_s[1..check_s.len()-1];
+        is_deref = true;
     }
 
-    // 0xXXXXXXXX → resolve
-    if let Some(hex) = s.strip_prefix("0x").or_else(|| s.strip_prefix("0X")) {
+    // Attempt to extract hex from check_s
+    let hex_opt = if let Some(h) = check_s.strip_prefix("gvar_") { Some(h) }
+                  else if let Some(h) = check_s.strip_prefix("0x") { Some(h) }
+                  else if let Some(h) = check_s.strip_prefix("0X") { Some(h) }
+                  else { None };
+
+    if let Some(hex) = hex_opt {
         if let Ok(addr) = u64::from_str_radix(hex, 16) {
-            if let Some(name) = resolved.resolve_addr(addr) {
-                return sanitize_c_ident(name);
-            }
-            if let Some(string) = resolved.resolve_string(addr) {
-                return format!("\"{}\"", escape_c_string(&truncate(string, 120)));
+            if !is_deref { // HIGH CONFIDENCE
+                if let Some(name) = resolved.resolve_addr(addr) {
+                    return sanitize_c_ident(name);
+                }
+                if let Some(string) = resolved.resolve_string(addr) {
+                    return format!("\"{}\" /* HIGH CONFIDENCE */", escape_c_string(&truncate(string, 120)));
+                }
+                if s.starts_with("gvar_") { return format!("*(DWORD*)0x{}", hex); }
+                return s.to_string();
+            } else { // MEDIUM CONFIDENCE (Memory Pointer De-ref)
+                if let Some(string) = resolved.ptr_to_string.get(&addr) {
+                    return format!("\"{}\" /* MEDIUM CONFIDENCE */", escape_c_string(&truncate(string, 120)));
+                }
+                // Also check if we dereference exactly an export or string directly
+                if let Some(name) = resolved.resolve_addr(addr) {
+                    return format!("[{}]", sanitize_c_ident(name));
+                }
+                if let Some(string) = resolved.resolve_string(addr) {
+                    // Usually you don't deref a string, but just in case
+                    return format!("[\"{}\"]", escape_c_string(&truncate(string, 120)));
+                }
+                if s.starts_with("[gvar_") { return format!("[*(DWORD*)0x{}]", hex); }
+                return s.to_string();
             }
         }
+        if s.starts_with("gvar_") { return format!("*(DWORD*)0x{}", hex); }
+        if s.starts_with("[gvar_") { return format!("[*(DWORD*)0x{}]", hex); }
+    }
+
+    // LOW CONFIDENCE CHECK: If it's a numeric addition inside brackets like [rbx + 0x10086238]
+    // or just a raw numeric scale, let's loosely see if it references a string.
+    let re_hex = s.split(|c: char| !c.is_alphanumeric());
+    let mut replaced_s = s.to_string();
+    let mut low_conf_found = false;
+    let mut low_conf_str = String::new();
+    
+    for token in re_hex {
+        if let Some(hex) = token.strip_prefix("0x").or_else(|| token.strip_prefix("0X")) {
+            if let Ok(addr) = u64::from_str_radix(hex, 16) {
+                if let Some(string) = resolved.resolve_string(addr) {
+                    low_conf_found = true;
+                    low_conf_str = escape_c_string(&truncate(string, 60));
+                }
+            }
+        }
+    }
+    
+    if low_conf_found {
+        return format!("{} /* LOW CONFIDENCE PROXIMITY: \"{}\" */", s, low_conf_str);
     }
 
     s.to_string()
@@ -553,59 +634,67 @@ fn rename_ssa_vars(func: &mut JsonFunction) {
 }
 
 fn prepare_calls(func: &mut JsonFunction, resolved: &ResolvedData, sig_db: &SignatureDatabase) {
-    for block in &mut func.blocks {
-        let insns = std::mem::take(&mut block.instructions);
-        let mut pending_args: Vec<String> = Vec::new();
-        let mut new_insns: Vec<JsonInstruction> = Vec::with_capacity(insns.len());
-        
-        let mut i = 0;
-        while i < insns.len() {
-            let insn = &insns[i];
+        let mut preds: std::collections::HashMap<&str, Vec<&str>> = std::collections::HashMap::new();
+        for link in &func.cfg_links {
+            preds.entry(link.to.as_str()).or_default().push(link.from.as_str());
+        }
+
+        let block_len = func.blocks.len();
+        for b_idx in 0..block_len {
+            let block_id = func.blocks[b_idx].id.clone();
+            let insns = std::mem::take(&mut func.blocks[b_idx].instructions);
+            let mut pending_args: Vec<String> = Vec::new();
+            let mut new_insns: Vec<JsonInstruction> = Vec::with_capacity(insns.len());
             
-            if is_prologue_epilogue_noise(insn) || insn.op == "nop" {
-                i += 1; continue;
-            }
-            
-            if insn.op == "push" {
-                let resolved_val = resolve_operand_str(insn.src.get(0).map(|s| s.as_str()).unwrap_or("?"), resolved);
-                pending_args.push(prettify_operand(&resolved_val));
-                i += 1; continue;
-            }
-            
-            if insn.op == "call" {
-                let target_raw = insn.src.get(0).map(|s| s.as_str()).unwrap_or("?");
-                let target = resolve_call_target(target_raw, resolved);
+            let mut i = 0;
+            while i < insns.len() {
+                let insn = &insns[i];
                 
-                let sig = sig_db.lookup(&target);
-                let expected_args = sig.map(|s| s.parameters.len()).unwrap_or(0);
-                let cc = sig.map(|s| s.calling_convention).unwrap_or(CallingConvention::Unknown);
+                if is_prologue_epilogue_noise(insn) || insn.op == "nop" {
+                    i += 1; continue;
+                }
                 
-                let mut args: Vec<String> = pending_args.drain(..).rev().collect();
+                if insn.op == "push" {
+                    let resolved_val = resolve_operand_str(insn.src.get(0).map(|s| s.as_str()).unwrap_or("?"), resolved);
+                    pending_args.push(prettify_operand(&resolved_val));
+                    i += 1; continue;
+                }
                 
-                let mut fastcall_args = Vec::new();
-                if cc == CallingConvention::Fastcall || cc == CallingConvention::Unknown {
-                    let regs64 = ["rcx", "rdx", "r8", "r9"];
-                    let regs32 = ["ecx", "edx", "r8d", "r9d"];
-                    for idx in 0..4 {
-                        if expected_args > 0 && fastcall_args.len() >= expected_args { break; }
-                        let mut found = false;
-                        for reg in [regs64[idx], regs32[idx]] {
-                            if let Some(val) = find_last_reg_assign(&new_insns, new_insns.len(), reg) {
-                                let resolved_val = resolve_operand_str(&val, resolved);
-                                fastcall_args.push(prettify_operand(&resolved_val));
-                                found = true;
-                                break;
+                if insn.op == "call" {
+                    let target_raw = insn.src.get(0).map(|s| s.as_str()).unwrap_or("?");
+                    let target = resolve_call_target(target_raw, resolved);
+                    
+                    let sig = sig_db.lookup(&target);
+                    let expected_args = sig.map(|s| s.parameters.len()).unwrap_or(0);
+                    let cc = sig.map(|s| s.calling_convention).unwrap_or(CallingConvention::Unknown);
+                    
+                    let mut args: Vec<String> = pending_args.drain(..).rev().collect();
+                    
+                    let mut fastcall_args = Vec::new();
+                    if cc == CallingConvention::Fastcall || cc == CallingConvention::Unknown {
+                        let regs64 = ["rcx", "rdx", "r8", "r9"];
+                        let regs32 = ["ecx", "edx", "r8d", "r9d"];
+                        for idx in 0..4 {
+                            if expected_args > 0 && fastcall_args.len() >= expected_args { break; }
+                            let mut found = false;
+                            for reg in [regs64[idx], regs32[idx]] {
+                                // HEAVY GLOBAL TRACER IS TRIGGERED HERE
+                                if let Some(val) = find_reg_assign_global(func, &block_id, &new_insns, new_insns.len(), reg, &preds) {
+                                    let resolved_val = resolve_operand_str(&val, resolved);
+                                    fastcall_args.push(prettify_operand(&resolved_val));
+                                    found = true;
+                                    break;
+                                }
                             }
-                        }
-                        if !found {
-                            if expected_args > 0 && idx < expected_args {
-                                fastcall_args.push(regs64[idx].to_string());
-                            } else if cc == CallingConvention::Unknown {
-                                break;
+                            if !found {
+                                if expected_args > 0 && idx < expected_args {
+                                    fastcall_args.push(regs64[idx].to_string());
+                                } else if cc == CallingConvention::Unknown {
+                                    break;
+                                }
                             }
                         }
                     }
-                }
                 
                 let mut final_args = fastcall_args;
                 final_args.extend(args);
@@ -662,7 +751,7 @@ fn prepare_calls(func: &mut JsonFunction, resolved: &ResolvedData, sig_db: &Sign
             i += 1;
         }
         
-        block.instructions = new_insns;
+        func.blocks[b_idx].instructions = new_insns;
     }
 }
 
@@ -768,7 +857,11 @@ fn truncate(s: &str, max: usize) -> String {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 fn apply_expression_folding_c(func: &mut JsonFunction, resolved: &ResolvedData) {
+    let mut opt_iters = 0;
     loop {
+        opt_iters += 1;
+        if opt_iters > 100 { break; } // FAILSafe to prevent absolute CPU hangs / OOMs on cyclic definitions
+
         let mut use_count: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
         let mut defs: std::collections::HashMap<String, String> = std::collections::HashMap::new();
         let mut def_idx: std::collections::HashMap<String, (usize, usize)> = std::collections::HashMap::new();
@@ -794,22 +887,30 @@ fn apply_expression_folding_c(func: &mut JsonFunction, resolved: &ResolvedData) 
         let mut folded_any = false;
         let mut to_remove: std::collections::HashSet<(usize, usize)> = std::collections::HashSet::new();
 
-        // Pass 2: Substitute single uses
+        // Pass 2: Substitute single uses and constants/simple regs everywhere
         for (b_idx, block) in func.blocks.iter_mut().enumerate() {
             for (i_idx, insn) in block.instructions.iter_mut().enumerate() {
                 for s in &mut insn.src {
-                    if use_count.get(s) == Some(&1) {
-                        if let Some(rhs) = defs.get(s) {
+                    let count = *use_count.get(s).unwrap_or(&0);
+                    if let Some(rhs) = defs.get(s) {
+                        let is_simple = rhs.starts_with("0x") || rhs.parse::<i64>().is_ok() || (!rhs.contains(' ') && !rhs.contains('(') && !rhs.contains('[') && rhs.len() < 10);
+                        if count == 1 || is_simple {
                             if let Some(&(def_b, def_i)) = def_idx.get(s) {
                                 let safe_to_fold = (def_b == b_idx && def_i < i_idx) || (def_b != b_idx);
                                 if safe_to_fold {
-                                    *s = if rhs.starts_with('(') && rhs.ends_with(')') {
+                                    let new_s = if rhs.starts_with('(') && rhs.ends_with(')') {
                                         rhs.clone()
                                     } else {
-                                        format!("({})", rhs)
+                                        if count == 1 && !is_simple { format!("({})", rhs) } else { rhs.clone() }
                                     };
-                                    to_remove.insert((def_b, def_i));
-                                    folded_any = true;
+                                    
+                                    if *s != new_s {
+                                        *s = new_s;
+                                        if count == 1 {
+                                            to_remove.insert((def_b, def_i));
+                                        }
+                                        folded_any = true;
+                                    }
                                 }
                             }
                         }
@@ -854,7 +955,14 @@ fn generate_rhs_c(insn: &JsonInstruction, resolved: &ResolvedData) -> String {
         "shl" => format!("{} << {}", s0, s1),
         "shr" => format!("(unsigned){} >> {}", s0, s1),
         "sar" => format!("(signed){} >> {}", s0, s1),
-        "lea" => format!("&{}", s0),
+        "lea" => {
+            if s0.starts_with("*(uintptr_t*)(") && s0.ends_with(")") {
+                // &*(uintptr_t*)(X) -> (void*)(X)
+                format!("(void*){}", &s0[14..])
+            } else {
+                format!("&{}", s0)
+            }
+        },
         "call" => insn.string_ref.clone().unwrap_or_else(|| "call(...)".to_string()),
         _ => String::new(),
     }
