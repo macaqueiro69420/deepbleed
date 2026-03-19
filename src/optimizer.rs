@@ -286,6 +286,84 @@ pub fn apply_constant_propagation(block: &mut BasicBlock) -> usize {
     propagated
 }
 
+/// Expression Folding: Inline variables that are assigned once and used once
+pub fn apply_expression_folding(block: &mut BasicBlock) -> usize {
+    let mut defs: FnvHashMap<String, Operand> = FnvHashMap::default();
+    let mut use_count: FnvHashMap<String, usize> = FnvHashMap::default();
+    let mut folded = 0;
+
+    // Count uses and find definitions
+    for insn in &block.ir_instructions {
+        match insn {
+            IRInsn::Assign { dst: Operand::SSAVar(name), src } => {
+                // Only fold simple operands or registers for now to avoid side-effect issues
+                if matches!(src, Operand::Imm(_) | Operand::UImm(_) | Operand::SSAVar(_) | Operand::Reg(_)) {
+                    defs.insert(name.clone(), src.clone());
+                }
+            }
+            _ => {}
+        }
+        
+        let mut local_uses: std::collections::HashSet<String> = std::collections::HashSet::new();
+        collect_src_vars(insn, &mut local_uses);
+        for name in local_uses {
+            *use_count.entry(name).or_insert(0) += 1;
+        }
+    }
+
+    // Replace uses if use_count == 1
+    for insn in &mut block.ir_instructions {
+        match insn {
+            IRInsn::Assign { dst, src } => {
+                if let Operand::SSAVar(name) = src {
+                    if use_count.get(name) == Some(&1) {
+                        if let Some(new_src) = defs.get(name) {
+                            *src = new_src.clone();
+                            folded += 1;
+                        }
+                    }
+                }
+            }
+            IRInsn::Add { lhs, rhs, .. } | IRInsn::Sub { lhs, rhs, .. }
+            | IRInsn::Mul { lhs, rhs, .. } | IRInsn::Div { lhs, rhs, .. }
+            | IRInsn::And { lhs, rhs, .. } | IRInsn::Or { lhs, rhs, .. }
+            | IRInsn::Xor { lhs, rhs, .. } | IRInsn::Shl { lhs, rhs, .. }
+            | IRInsn::Shr { lhs, rhs, .. } | IRInsn::Sar { lhs, rhs, .. } => {
+                if let Operand::SSAVar(name) = lhs {
+                    if use_count.get(name) == Some(&1) {
+                        if let Some(new_src) = defs.get(name) {
+                            *lhs = new_src.clone();
+                            folded += 1;
+                        }
+                    }
+                }
+                if let Operand::SSAVar(name) = rhs {
+                    if use_count.get(name) == Some(&1) {
+                        if let Some(new_src) = defs.get(name) {
+                            *rhs = new_src.clone();
+                            folded += 1;
+                        }
+                    }
+                }
+            }
+            IRInsn::Push { src } | IRInsn::Call { target: src } | IRInsn::Load { src, .. } 
+            | IRInsn::Movzx { src, .. } | IRInsn::Movsx { src, .. } | IRInsn::Lea { src, .. } => {
+                if let Operand::SSAVar(name) = src {
+                    if use_count.get(name) == Some(&1) {
+                        if let Some(new_src) = defs.get(name) {
+                            *src = new_src.clone();
+                            folded += 1;
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
+    folded
+}
+
 /// Full optimization pipeline for a block
 pub fn optimize_block(block: &mut BasicBlock) -> (Vec<SsaVarInfo>, OptStats) {
     let mut stats = OptStats::default();
@@ -301,7 +379,10 @@ pub fn optimize_block(block: &mut BasicBlock) -> (Vec<SsaVarInfo>, OptStats) {
     // Constant propagation
     stats.constants_propagated = apply_constant_propagation(block);
 
-    // DCE
+    // Expression folding (Inline single-use vars)
+    apply_expression_folding(block);
+
+    // DCE (Eliminate instructions whose results were inlined or are unused)
     stats.dce_eliminated = apply_dce(block);
 
     (ssa_vars, stats)

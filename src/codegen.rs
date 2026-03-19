@@ -1,4 +1,5 @@
 use crate::resolver::ResolvedData;
+use crate::signatures::{SignatureDatabase, CallingConvention};
 use crate::structurer::*;
 use crate::types::*;
 
@@ -10,7 +11,7 @@ use crate::types::*;
 
 const INDENT: &str = "    ";
 
-pub fn generate_c(output: &JsonOutput, resolved: &ResolvedData) -> String {
+pub fn generate_c(output: &JsonOutput, resolved: &ResolvedData, sig_db: &SignatureDatabase) -> String {
     let mut c = String::with_capacity(4 * 1024 * 1024);
 
     // ─── File header ───
@@ -58,8 +59,15 @@ pub fn generate_c(output: &JsonOutput, resolved: &ResolvedData) -> String {
     c.push_str("/* ═══ Forward Declarations ═══ */\n");
     for func in &output.functions {
         let fname = resolve_func_name(&func.name, &func.address, resolved);
-        let ret_type = infer_return_type(&func.name, &fname);
-        let params = infer_params(func, resolved);
+        let (ret_type, params) = if let Some(sig) = sig_db.lookup(&fname) {
+            let pstr = if sig.parameters.is_empty() { "void".to_string() }
+                      else { sig.parameters.iter().map(|p| format!("{} {}", p.ptype, p.name)).collect::<Vec<_>>().join(", ") };
+            (sig.ret_type.as_str(), pstr)
+        } else {
+            let rt = infer_return_type(&func.name, &fname);
+            let ps = infer_params(func, resolved);
+            (rt, ps)
+        };
         c.push_str(&format!("{} {}({}); /* {} @ {} */\n",
             ret_type, fname, params, func.kind, func.address));
     }
@@ -67,16 +75,21 @@ pub fn generate_c(output: &JsonOutput, resolved: &ResolvedData) -> String {
 
     // ─── Generate each function ───
     for func in &output.functions {
-        generate_function(&mut c, func, resolved);
+        generate_function(&mut c, func, resolved, sig_db);
     }
 
     c
 }
 
-fn generate_function(c: &mut String, func: &JsonFunction, resolved: &ResolvedData) {
+fn generate_function(c: &mut String, func: &JsonFunction, resolved: &ResolvedData, sig_db: &SignatureDatabase) {
     let fname = resolve_func_name(&func.name, &func.address, resolved);
-    let ret_type = infer_return_type(&func.name, &fname);
-    let params = infer_params(func, resolved);
+    let (ret_type, params) = if let Some(sig) = sig_db.lookup(&fname) {
+        let pstr = if sig.parameters.is_empty() { "void".to_string() }
+                  else { sig.parameters.iter().map(|p| format!("{} {}", p.ptype, p.name)).collect::<Vec<_>>().join(", ") };
+        (sig.ret_type.clone(), pstr)
+    } else {
+        (infer_return_type(&func.name, &fname).to_string(), infer_params(func, resolved))
+    };
 
     c.push_str("/* ═══════════════════════════════════════════════════\n");
     c.push_str(&format!(" * {} @ {} ({})\n", fname, func.address, func.kind));
@@ -101,6 +114,7 @@ fn generate_function(c: &mut String, func: &JsonFunction, resolved: &ResolvedDat
     // ─── Emit structured C ───
     let mut ctx = EmitCtx {
         resolved: &resolved,
+        sig_db,
         indent: 1,
     };
     for node in &structured {
@@ -128,6 +142,7 @@ fn generate_function(c: &mut String, func: &JsonFunction, resolved: &ResolvedDat
 
 struct EmitCtx<'a> {
     resolved: &'a ResolvedData,
+    sig_db: &'a SignatureDatabase,
     indent: usize,
 }
 
@@ -136,7 +151,7 @@ impl<'a> EmitCtx<'a> {
         INDENT.repeat(self.indent)
     }
     fn indented(&self) -> EmitCtx<'a> {
-        EmitCtx { resolved: self.resolved, indent: self.indent + 1 }
+        EmitCtx { resolved: self.resolved, sig_db: self.sig_db, indent: self.indent + 1 }
     }
 }
 
@@ -244,8 +259,62 @@ fn emit_flat_block(c: &mut String, fb: &FlatBlock, ctx: &EmitCtx) {
             let target_raw = insn.src.get(0).map(|s| s.as_str()).unwrap_or("?");
             let target = resolve_call_target(target_raw, ctx.resolved);
 
+            // Fetch signature if available
+            let sig = ctx.sig_db.lookup(&target);
+            let expected_args = sig.map(|s| s.parameters.len()).unwrap_or(0);
+            let cc = sig.map(|s| s.calling_convention).unwrap_or(CallingConvention::Unknown);
+
             // args come in reverse (stack = LIFO)
-            let args: Vec<String> = pending_call_args.drain(..).rev().collect();
+            let mut args: Vec<String> = pending_call_args.drain(..).rev().collect();
+            
+            // X64 / Fastcall support: also look at RCX, RDX, R8, R9
+            let mut fastcall_args = Vec::new();
+            if cc == CallingConvention::Fastcall || (cc == CallingConvention::Unknown && expected_args > 0) {
+                // Heuristic: check if these registers were assigned recently
+                let regs = ["rcx", "rdx", "r8", "r9", "ecx", "edx"];
+                for (idx, &reg) in regs.iter().enumerate() {
+                    if fastcall_args.len() >= expected_args && expected_args > 0 { break; }
+                    // Look back for assignments to these registers
+                    if let Some(val) = find_last_reg_assign(insns, i, reg) {
+                        fastcall_args.push(val);
+                    } else if idx < expected_args {
+                        // If it's x64 and we expect args, they are likely in these regs
+                        fastcall_args.push(reg.to_string());
+                    }
+                }
+            }
+            
+            // Combine fastcall args with stack args
+            let mut final_args_list = fastcall_args;
+            final_args_list.extend(args);
+            let mut args = final_args_list;
+
+            // If signature expects more args than we have, try to pad
+            if expected_args > args.len() {
+                for i in args.len()..expected_args {
+                    args.push(format!("/* param_{}? */ 0", i + 1));
+                }
+            } else if sig.is_some() && args.len() > expected_args {
+                // Too many pushes? Move excess back to unused or comment them
+                let excess = args.len() - expected_args;
+                for _ in 0..excess {
+                    let extra = args.pop().unwrap();
+                    c.push_str(&format!("{}/* supra-argument: {} */\n", pad, extra));
+                }
+            }
+
+            // If we have a signature, try to label the arguments
+            let final_args: Vec<String> = if let Some(s) = sig {
+                args.iter().enumerate().map(|(idx, val)| {
+                    if let Some(param) = s.parameters.get(idx) {
+                        format!("/* {} */ {}", param.name, val)
+                    } else {
+                        val.clone()
+                    }
+                }).collect()
+            } else {
+                args
+            };
 
             // Check if there's a following assign eax, eax that uses return value
             let ret_used = insns.get(i + 1)
@@ -258,9 +327,9 @@ fn emit_flat_block(c: &mut String, fb: &FlatBlock, ctx: &EmitCtx) {
                     pad,
                     sanitize_c_ident(&target),
                     target,
-                    args.join(", ")));
+                    final_args.join(", ")));
             } else {
-                c.push_str(&format!("{}{}({});\n", pad, target, args.join(", ")));
+                c.push_str(&format!("{}{}({});\n", pad, target, final_args.join(", ")));
             }
             i += 1;
             continue;
@@ -311,6 +380,21 @@ fn collect_eax_before(insns: &[JsonInstruction], idx: usize) -> Option<String> {
             }
         }
         break; // only look one step back
+    }
+    None
+}
+
+/// Look backwards for the last assignment to a specific register
+fn find_last_reg_assign(insns: &[JsonInstruction], idx: usize, reg_name: &str) -> Option<String> {
+    for insn in insns[..idx].iter().rev() {
+        if insn.op == "assign" || insn.op == "movzx" || insn.op == "movsx" || insn.op == "lea" {
+            if let Some(dst) = &insn.dst {
+                if dst.contains(reg_name) {
+                    return insn.src.get(0).cloned();
+                }
+            }
+        }
+        if insn.op == "call" { break; } // Don't look past other calls
     }
     None
 }

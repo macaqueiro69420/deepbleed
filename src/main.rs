@@ -4,6 +4,7 @@ mod optimizer;
 mod entry_hunter;
 mod resolver;
 mod codegen;
+mod signatures;
 mod structurer;
 
 use crate::entry_hunter::*;
@@ -294,10 +295,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let c_code = {
         let json_ref = &json_output;
         let res_ref  = &resolved;
+        let sig_db   = signatures::SignatureDatabase::new();
         std::thread::scope(|s| {
             std::thread::Builder::new()
                 .stack_size(128 * 1024 * 1024) // 128 MB stack
-                .spawn_scoped(s, move || generate_c(json_ref, res_ref))
+                .spawn_scoped(s, move || generate_c(json_ref, res_ref, &sig_db))
                 .expect("spawn")
                 .join()
                 .expect("codegen thread")
