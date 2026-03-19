@@ -34,6 +34,10 @@ const EXTERNAL_PATTERNS: &[&str] = &[
     "CreateFile", "CloseHandle", "ReadFile", "WriteFile",
     "ExitProcess", "TerminateProcess",
     "IsDebuggerPresent", "OutputDebugString",
+    // --- MinGW & GCC specific ---
+    "___chkstk", "_pei386", "_matherr", "__main", "__tls",
+    "__tmainCRTStartup", "_mainCRTStartup", "WinMainCRTStartup",
+    "__dyn_tls", "__mingw", "__cpu_features",
 ];
 
 /// Known external DLL patterns
@@ -68,7 +72,6 @@ pub fn build_external_set(obj: &object::File<'_>) -> FnvHashSet<String> {
     externals
 }
 
-/// Check if a function address likely belongs to external library code
 pub fn is_likely_external(
     func_name: &str,
     _func_addr: u64,
@@ -79,10 +82,13 @@ pub fn is_likely_external(
     }
     // Check prefix patterns
     for pat in EXTERNAL_PATTERNS {
-        if func_name.starts_with(pat) {
+        if func_name.contains(pat) {
             return true;
         }
     }
+    // High confidence heuristics
+    if func_name.starts_with("__") && func_name != "__main" { return true; }
+    if func_name.starts_with("_") && (func_name.contains("CRT") || func_name.contains("pei386") || func_name.contains("chkstk")) { return true; }
     false
 }
 

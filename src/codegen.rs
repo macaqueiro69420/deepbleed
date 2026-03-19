@@ -11,8 +11,8 @@ use crate::types::*;
 
 const INDENT: &str = "    ";
 
-pub fn generate_c(output: &JsonOutput, resolved: &ResolvedData, sig_db: &SignatureDatabase) -> String {
-    let mut c = String::with_capacity(4 * 1024 * 1024);
+pub fn generate_c_header(output: &JsonOutput) -> String {
+    let mut c = String::with_capacity(1024 * 1024);
 
     // ─── File header ───
     c.push_str("/*\n");
@@ -31,7 +31,7 @@ pub fn generate_c(output: &JsonOutput, resolved: &ResolvedData, sig_db: &Signatu
         output.stats.external_functions));
     c.push_str(" * ═══════════════════════════════════════════════════\n");
     c.push_str(" */\n\n");
-    c.push_str("#include <windows.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n\n");
+    c.push_str("#include <windows.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <stdint.h>\n#include <stdbool.h>\n\n");
 
     // ─── Imports as extern declarations ───
     if !output.imports.is_empty() {
@@ -48,15 +48,19 @@ pub fn generate_c(output: &JsonOutput, resolved: &ResolvedData, sig_db: &Signatu
         c.push_str("/* ═══ String References ═══ */\n");
         for (addr, s) in &output.strings {
             if s.len() < 4 { continue; }
-            let hex = addr.trim_start_matches("0x");
+            let _hex = addr.trim_start_matches("0x");
             c.push_str(&format!("/* {} = \"{}\" */\n", addr, escape_c_string(&truncate(s, 80))));
-            let _ = hex;
         }
         c.push('\n');
     }
 
     // ─── Forward declarations ───
     c.push_str("/* ═══ Forward Declarations ═══ */\n");
+    c
+}
+
+pub fn generate_c_forward_decls(output: &JsonOutput, resolved: &ResolvedData, sig_db: &SignatureDatabase) -> String {
+    let mut c = String::new();
     for func in &output.functions {
         let fname = resolve_func_name(&func.name, &func.address, resolved);
         let (ret_type, params) = if let Some(sig) = sig_db.lookup(&fname) {
@@ -72,8 +76,14 @@ pub fn generate_c(output: &JsonOutput, resolved: &ResolvedData, sig_db: &Signatu
             ret_type, fname, params, func.kind, func.address));
     }
     c.push('\n');
+    c
+}
 
-    // ─── Generate each function ───
+pub fn generate_c(output: &JsonOutput, resolved: &ResolvedData, sig_db: &SignatureDatabase) -> String {
+    let mut c = generate_c_header(output);
+    c.push_str(&generate_c_forward_decls(output, resolved, sig_db));
+
+    // ─── Generate each function (Serial fallback, main handles parallel) ───
     for func in &output.functions {
         generate_function(&mut c, func, resolved, sig_db);
     }
@@ -81,7 +91,19 @@ pub fn generate_c(output: &JsonOutput, resolved: &ResolvedData, sig_db: &Signatu
     c
 }
 
-fn generate_function(c: &mut String, func: &JsonFunction, resolved: &ResolvedData, sig_db: &SignatureDatabase) {
+pub fn generate_function_string(func: &JsonFunction, resolved: &ResolvedData, sig_db: &SignatureDatabase) -> String {
+    let mut c = String::new();
+    generate_function(&mut c, func, resolved, sig_db);
+    c
+}
+
+pub fn generate_function(c: &mut String, func_in: &JsonFunction, resolved: &ResolvedData, sig_db: &SignatureDatabase) {
+    let mut func_val = func_in.clone();
+    rename_ssa_vars(&mut func_val);
+    prepare_calls(&mut func_val, resolved, sig_db);
+    apply_expression_folding_c(&mut func_val, resolved);
+    let func = &func_val;
+
     let fname = resolve_func_name(&func.name, &func.address, resolved);
     let (ret_type, params) = if let Some(sig) = sig_db.lookup(&fname) {
         let pstr = if sig.parameters.is_empty() { "void".to_string() }
@@ -209,7 +231,6 @@ fn emit_node(c: &mut String, node: &CfgStructure, ctx: &mut EmitCtx, func: &Json
 
 fn emit_flat_block(c: &mut String, fb: &FlatBlock, ctx: &EmitCtx) {
     let pad = ctx.pad();
-    let mut pending_call_args: Vec<String> = Vec::new();
 
     let insns = &fb.instructions;
     let n = insns.len();
@@ -231,7 +252,6 @@ fn emit_flat_block(c: &mut String, fb: &FlatBlock, ctx: &EmitCtx) {
                 .map(|nx| nx.op == "cond_jump")
                 .unwrap_or(false);
             if !next_is_branch {
-                // standalone CMP/TEST — show as comparison comment
                 let lhs = resolve_operand_str(insn.src.get(0).map(|s| s.as_str()).unwrap_or("?"), ctx.resolved);
                 let rhs = resolve_operand_str(insn.src.get(1).map(|s| s.as_str()).unwrap_or("?"), ctx.resolved);
                 c.push_str(&format!("{}/* compare {} vs {} */\n", pad, lhs, rhs));
@@ -246,90 +266,13 @@ fn emit_flat_block(c: &mut String, fb: &FlatBlock, ctx: &EmitCtx) {
             continue;
         }
 
-        // ── PUSH before call → collect as arg ──
-        if insn.op == "push" {
-            let arg = resolve_operand_str(insn.src.get(0).map(|s| s.as_str()).unwrap_or("?"), ctx.resolved);
-            pending_call_args.push(arg);
-            i += 1;
-            continue;
-        }
-
-        // ── CALL — emit with accumulated args ──
+        // ── CALL (prepared) ──
         if insn.op == "call" {
-            let target_raw = insn.src.get(0).map(|s| s.as_str()).unwrap_or("?");
-            let target = resolve_call_target(target_raw, ctx.resolved);
-
-            // Fetch signature if available
-            let sig = ctx.sig_db.lookup(&target);
-            let expected_args = sig.map(|s| s.parameters.len()).unwrap_or(0);
-            let cc = sig.map(|s| s.calling_convention).unwrap_or(CallingConvention::Unknown);
-
-            // args come in reverse (stack = LIFO)
-            let mut args: Vec<String> = pending_call_args.drain(..).rev().collect();
-            
-            // X64 / Fastcall support: also look at RCX, RDX, R8, R9
-            let mut fastcall_args = Vec::new();
-            if cc == CallingConvention::Fastcall || (cc == CallingConvention::Unknown && expected_args > 0) {
-                // Heuristic: check if these registers were assigned recently
-                let regs = ["rcx", "rdx", "r8", "r9", "ecx", "edx"];
-                for (idx, &reg) in regs.iter().enumerate() {
-                    if fastcall_args.len() >= expected_args && expected_args > 0 { break; }
-                    // Look back for assignments to these registers
-                    if let Some(val) = find_last_reg_assign(insns, i, reg) {
-                        fastcall_args.push(val);
-                    } else if idx < expected_args {
-                        // If it's x64 and we expect args, they are likely in these regs
-                        fastcall_args.push(reg.to_string());
-                    }
-                }
-            }
-            
-            // Combine fastcall args with stack args
-            let mut final_args_list = fastcall_args;
-            final_args_list.extend(args);
-            let mut args = final_args_list;
-
-            // If signature expects more args than we have, try to pad
-            if expected_args > args.len() {
-                for i in args.len()..expected_args {
-                    args.push(format!("/* param_{}? */ 0", i + 1));
-                }
-            } else if sig.is_some() && args.len() > expected_args {
-                // Too many pushes? Move excess back to unused or comment them
-                let excess = args.len() - expected_args;
-                for _ in 0..excess {
-                    let extra = args.pop().unwrap();
-                    c.push_str(&format!("{}/* supra-argument: {} */\n", pad, extra));
-                }
-            }
-
-            // If we have a signature, try to label the arguments
-            let final_args: Vec<String> = if let Some(s) = sig {
-                args.iter().enumerate().map(|(idx, val)| {
-                    if let Some(param) = s.parameters.get(idx) {
-                        format!("/* {} */ {}", param.name, val)
-                    } else {
-                        val.clone()
-                    }
-                }).collect()
+            let call_str = insn.string_ref.as_deref().unwrap_or("call(...)");
+            if let Some(dst) = &insn.dst {
+                c.push_str(&format!("{}{} = {};\n", pad, prettify_operand(dst), call_str));
             } else {
-                args
-            };
-
-            // Check if there's a following assign eax, eax that uses return value
-            let ret_used = insns.get(i + 1)
-                .map(|nx| nx.op == "assign" && nx.dst.as_deref().map(|d| d.contains("eax") || d.contains("rax")).unwrap_or(false))
-                .unwrap_or(false);
-
-            if ret_used {
-                // Let the next assign consume the call's result
-                c.push_str(&format!("{}{}_retval = {}({});\n",
-                    pad,
-                    sanitize_c_ident(&target),
-                    target,
-                    final_args.join(", ")));
-            } else {
-                c.push_str(&format!("{}{}({});\n", pad, target, final_args.join(", ")));
+                c.push_str(&format!("{}{};\n", pad, call_str));
             }
             i += 1;
             continue;
@@ -347,13 +290,6 @@ fn emit_flat_block(c: &mut String, fb: &FlatBlock, ctx: &EmitCtx) {
             continue;
         }
 
-        // ── Flush pending push args if we reach a non-call non-push ──
-        if !pending_call_args.is_empty() {
-            for arg in pending_call_args.drain(..) {
-                c.push_str(&format!("{}/* unused arg: {} */\n", pad, arg));
-            }
-        }
-
         // ── Generic instruction emission ──
         let line = instruction_to_c(insn, ctx.resolved);
         if !line.is_empty() {
@@ -362,17 +298,12 @@ fn emit_flat_block(c: &mut String, fb: &FlatBlock, ctx: &EmitCtx) {
 
         i += 1;
     }
-
-    // Flush remaining push args
-    for arg in pending_call_args.drain(..) {
-        c.push_str(&format!("{}/* unused arg: {} */\n", pad, arg));
-    }
 }
 
 /// Look backwards from `idx` for the last assign to eax/rax
 fn collect_eax_before(insns: &[JsonInstruction], idx: usize) -> Option<String> {
     for insn in insns[..idx].iter().rev() {
-        if insn.op == "assign" || insn.op == "movzx" || insn.op == "movsx" {
+        if insn.op == "assign" || insn.op == "movzx" || insn.op == "movsx" || insn.op == "movabs" || insn.op == "load" {
             if let Some(dst) = &insn.dst {
                 if dst.contains("eax") || dst.contains("rax") {
                     return insn.src.get(0).cloned();
@@ -387,7 +318,7 @@ fn collect_eax_before(insns: &[JsonInstruction], idx: usize) -> Option<String> {
 /// Look backwards for the last assignment to a specific register
 fn find_last_reg_assign(insns: &[JsonInstruction], idx: usize, reg_name: &str) -> Option<String> {
     for insn in insns[..idx].iter().rev() {
-        if insn.op == "assign" || insn.op == "movzx" || insn.op == "movsx" || insn.op == "lea" {
+        if insn.op == "assign" || insn.op == "movzx" || insn.op == "movsx" || insn.op == "lea" || insn.op == "movabs" || insn.op == "load" {
             if let Some(dst) = &insn.dst {
                 if dst.contains(reg_name) {
                     return insn.src.get(0).cloned();
@@ -573,7 +504,7 @@ fn resolve_call_target(target: &str, resolved: &ResolvedData) -> String {
     if let Some(hex2) = target.strip_prefix("gvar_") {
         if let Ok(addr) = u64::from_str_radix(hex2, 16) {
             if let Some(name) = resolved.resolve_addr(addr) {
-                return format!("[{}]", sanitize_c_ident(name));
+                return format!("(&{})", sanitize_c_ident(name));
             }
         }
     }
@@ -582,6 +513,156 @@ fn resolve_call_target(target: &str, resolved: &ResolvedData) -> String {
         return format!("(*(FARPROC*){})", target);
     }
     target.to_string()
+}
+
+fn rename_ssa_vars(func: &mut JsonFunction) {
+    let mut mapped_names = std::collections::HashMap::new();
+    let mut counter = 1;
+
+    let mut map_name = |s: &mut String| {
+        if s.contains('_') 
+            && !s.starts_with("arg_") 
+            && !s.starts_with("var_") 
+            && !s.starts_with("local_") 
+            && !s.starts_with("flags")
+            && !s.starts_with("gvar_") 
+        {
+            let new_name = mapped_names.entry(s.clone()).or_insert_with(|| {
+                let v = format!("t{}", counter);
+                counter += 1;
+                v
+            });
+            *s = new_name.clone();
+        }
+    };
+
+    for b in &mut func.blocks {
+        for i in &mut b.instructions {
+            if let Some(d) = &mut i.dst {
+                map_name(d);
+            }
+            for s in &mut i.src {
+                map_name(s);
+            }
+        }
+    }
+    for v in &mut func.ssa_vars {
+        map_name(&mut v.name);
+    }
+}
+
+fn prepare_calls(func: &mut JsonFunction, resolved: &ResolvedData, sig_db: &SignatureDatabase) {
+    for block in &mut func.blocks {
+        let insns = std::mem::take(&mut block.instructions);
+        let mut pending_args: Vec<String> = Vec::new();
+        let mut new_insns: Vec<JsonInstruction> = Vec::with_capacity(insns.len());
+        
+        let mut i = 0;
+        while i < insns.len() {
+            let insn = &insns[i];
+            
+            if is_prologue_epilogue_noise(insn) || insn.op == "nop" {
+                i += 1; continue;
+            }
+            
+            if insn.op == "push" {
+                let resolved_val = resolve_operand_str(insn.src.get(0).map(|s| s.as_str()).unwrap_or("?"), resolved);
+                pending_args.push(prettify_operand(&resolved_val));
+                i += 1; continue;
+            }
+            
+            if insn.op == "call" {
+                let target_raw = insn.src.get(0).map(|s| s.as_str()).unwrap_or("?");
+                let target = resolve_call_target(target_raw, resolved);
+                
+                let sig = sig_db.lookup(&target);
+                let expected_args = sig.map(|s| s.parameters.len()).unwrap_or(0);
+                let cc = sig.map(|s| s.calling_convention).unwrap_or(CallingConvention::Unknown);
+                
+                let mut args: Vec<String> = pending_args.drain(..).rev().collect();
+                
+                let mut fastcall_args = Vec::new();
+                if cc == CallingConvention::Fastcall || cc == CallingConvention::Unknown {
+                    let regs64 = ["rcx", "rdx", "r8", "r9"];
+                    let regs32 = ["ecx", "edx", "r8d", "r9d"];
+                    for idx in 0..4 {
+                        if expected_args > 0 && fastcall_args.len() >= expected_args { break; }
+                        let mut found = false;
+                        for reg in [regs64[idx], regs32[idx]] {
+                            if let Some(val) = find_last_reg_assign(&new_insns, new_insns.len(), reg) {
+                                let resolved_val = resolve_operand_str(&val, resolved);
+                                fastcall_args.push(prettify_operand(&resolved_val));
+                                found = true;
+                                break;
+                            }
+                        }
+                        if !found {
+                            if expected_args > 0 && idx < expected_args {
+                                fastcall_args.push(regs64[idx].to_string());
+                            } else if cc == CallingConvention::Unknown {
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                let mut final_args = fastcall_args;
+                final_args.extend(args);
+                
+                if expected_args > final_args.len() {
+                    for j in final_args.len()..expected_args {
+                        final_args.push(format!("/* param_{}? */ 0", j + 1));
+                    }
+                } else if sig.is_some() && final_args.len() > expected_args {
+                    let excess = final_args.len() - expected_args;
+                    for _ in 0..excess { final_args.pop(); }
+                }
+                
+                if let Some(s) = sig {
+                    for (j, arg) in final_args.iter_mut().enumerate() {
+                        if let Some(param) = s.parameters.get(j) {
+                            *arg = format!("/* {} */ {}", param.name, arg);
+                        }
+                    }
+                }
+                
+                let formatted_call = format!("{}({})", sanitize_c_ident(&target), final_args.join(", "));
+                
+                // Return linkage: Look ahead to see if the next instruction consumes RAX
+                let mut call_dst = None;
+                if i + 1 < insns.len() {
+                    let next = &insns[i + 1];
+                    if next.op == "assign" {
+                        if let Some(d) = next.dst.as_deref() {
+                            let src = next.src.get(0).map(|s| s.as_str()).unwrap_or("");
+                            if src.contains("eax") || src.contains("rax") || src.contains("al") {
+                                call_dst = Some(d.to_string());
+                                i += 1; // skip the assignment, fold it into the call
+                            }
+                        }
+                    }
+                }
+
+                let mut new_insn = insn.clone();
+                new_insn.dst = call_dst;
+                new_insn.string_ref = Some(formatted_call);
+                new_insn.src.extend(final_args); // For semantic info
+                new_insns.push(new_insn);
+                
+                i += 1; continue;
+            }
+            
+            // If not push/call, just flush args (or ignore as we optimized them away)
+            if !pending_args.is_empty() {
+                pending_args.clear();
+            }
+            
+            new_insns.push(insn.clone());
+            i += 1;
+        }
+        
+        block.instructions = new_insns;
+    }
 }
 
 fn resolve_func_name(name: &str, addr_str: &str, resolved: &ResolvedData) -> String {
@@ -679,4 +760,101 @@ fn escape_c_string(s: &str) -> String {
 fn truncate(s: &str, max: usize) -> String {
     if s.len() <= max { s.to_string() }
     else { format!("{}...", &s[..max]) }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  Expression Folding pass for C Output
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+fn apply_expression_folding_c(func: &mut JsonFunction, resolved: &ResolvedData) {
+    loop {
+        let mut use_count: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
+        let mut defs: std::collections::HashMap<String, String> = std::collections::HashMap::new();
+        let mut def_idx: std::collections::HashMap<String, (usize, usize)> = std::collections::HashMap::new();
+
+        // Pass 1: count uses & collect foldable definitions
+        for (b_idx, block) in func.blocks.iter().enumerate() {
+            for (i_idx, insn) in block.instructions.iter().enumerate() {
+                for s in &insn.src {
+                    *use_count.entry(s.clone()).or_insert(0) += 1;
+                }
+                if let Some(dst) = &insn.dst {
+                    if !dst.is_empty() && dst.contains("_") {
+                        let rhs = generate_rhs_c(insn, resolved);
+                        if !rhs.is_empty() {
+                            defs.insert(dst.clone(), rhs);
+                            def_idx.insert(dst.clone(), (b_idx, i_idx));
+                        }
+                    }
+                }
+            }
+        }
+
+        let mut folded_any = false;
+        let mut to_remove: std::collections::HashSet<(usize, usize)> = std::collections::HashSet::new();
+
+        // Pass 2: Substitute single uses
+        for (b_idx, block) in func.blocks.iter_mut().enumerate() {
+            for (i_idx, insn) in block.instructions.iter_mut().enumerate() {
+                for s in &mut insn.src {
+                    if use_count.get(s) == Some(&1) {
+                        if let Some(rhs) = defs.get(s) {
+                            if let Some(&(def_b, def_i)) = def_idx.get(s) {
+                                let safe_to_fold = (def_b == b_idx && def_i < i_idx) || (def_b != b_idx);
+                                if safe_to_fold {
+                                    *s = if rhs.starts_with('(') && rhs.ends_with(')') {
+                                        rhs.clone()
+                                    } else {
+                                        format!("({})", rhs)
+                                    };
+                                    to_remove.insert((def_b, def_i));
+                                    folded_any = true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if !folded_any { break; }
+
+        let mut remove_vec: Vec<_> = to_remove.into_iter().collect();
+        remove_vec.sort_by(|a, b| match b.0.cmp(&a.0) {
+            std::cmp::Ordering::Equal => b.1.cmp(&a.1),
+            other => other,
+        });
+
+        for (b, i) in remove_vec {
+            if b < func.blocks.len() && i < func.blocks[b].instructions.len() {
+                func.blocks[b].instructions.remove(i);
+            }
+        }
+    }
+}
+
+fn generate_rhs_c(insn: &JsonInstruction, resolved: &ResolvedData) -> String {
+    let resolve = |s: &str| resolve_operand_str(s, resolved);
+    let src: Vec<String> = insn.src.iter().map(|s| prettify_operand(&resolve(s))).collect();
+    let q = "?".to_string();
+    let s0 = src.get(0).cloned().unwrap_or_else(|| q.clone());
+    let s1 = src.get(1).cloned().unwrap_or_else(|| q.clone());
+
+    match insn.op.as_str() {
+        "assign" | "movzx" | "movsx" => s0,
+        "add" => format!("{} + {}", s0, s1),
+        "sub" => format!("{} - {}", s0, s1),
+        "mul" => format!("{} * {}", s0, s1),
+        "div" => format!("{} / {}", s0, s1),
+        "and" => format!("{} & {}", s0, s1),
+        "or"  => format!("{} | {}", s0, s1),
+        "xor" => format!("{} ^ {}", s0, s1),
+        "not" => format!("~{}", s0),
+        "shl" => format!("{} << {}", s0, s1),
+        "shr" => format!("(unsigned){} >> {}", s0, s1),
+        "sar" => format!("(signed){} >> {}", s0, s1),
+        "lea" => format!("&{}", s0),
+        "call" => insn.string_ref.clone().unwrap_or_else(|| "call(...)".to_string()),
+        _ => String::new(),
+    }
 }

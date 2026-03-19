@@ -218,6 +218,8 @@ pub struct CfgGraph<'a> {
     pub dom_children: FnvHashMap<&'a str, Vec<&'a str>>,
     /// Back edges (for loop detection)
     pub back_edges: FnvHashSet<(&'a str, &'a str)>,
+    /// Pre-calculated RPO indices for O(1) lookup
+    pub rpo_indices: FnvHashMap<&'a str, usize>,
 }
 
 impl<'a> CfgGraph<'a> {
@@ -264,7 +266,9 @@ impl<'a> CfgGraph<'a> {
             }
         }
 
-        CfgGraph { blocks, succs, preds, order, idom, dom_children, back_edges }
+        let rpo_indices = order.iter().enumerate().map(|(i, &s)| (s, i)).collect();
+
+        CfgGraph { blocks, succs, preds, order, idom, dom_children, back_edges, rpo_indices }
     }
 
     /// Does `a` dominate `b`?
@@ -275,28 +279,33 @@ impl<'a> CfgGraph<'a> {
     /// Get immediate post-dominator (convergence point) of two successors
     /// This is the immediate dominator of the join node.
     pub fn find_merge(&self, a: &'a str, b: &'a str) -> Option<&'a str> {
-        // BFS from both sides in RPO to find first common node
-        let rpo_idx: FnvHashMap<&str, usize> = self.order.iter()
-            .enumerate().map(|(i, &s)| (s, i)).collect();
-
-        let a_reach = self.reachable(a);
-        let b_reach = self.reachable(b);
+        // Optimization: Use dominator hierarchy if available, but a join node 
+        // in a non-structured CFG is harder. BFS from both is the fallback.
+        // For structured C, we want the "lowest common reachable node" in RPO.
+        
+        let a_reach = self.reachable_limited(a);
+        let b_reach = self.reachable_limited(b);
 
         let mut common: Vec<&str> = a_reach.intersection(&b_reach)
             .copied()
             .collect();
 
         // Sort by RPO index — first one is the merge point
-        common.sort_by_key(|s| rpo_idx.get(*s).copied().unwrap_or(usize::MAX));
+        common.sort_by_key(|s| self.rpo_indices.get(*s).copied().unwrap_or(usize::MAX));
         common.into_iter().next()
     }
 
-    /// All blocks reachable from `start` (not crossing back edges)
-    pub fn reachable(&self, start: &'a str) -> FnvHashSet<&'a str> {
+    /// All blocks reachable from `start` (not crossing back edges, limited search)
+    pub fn reachable_limited(&self, start: &'a str) -> FnvHashSet<&'a str> {
         let mut visited = FnvHashSet::default();
         let mut stack = vec![start];
+        // Limit search to 512 nodes per path to avoid O(N^2) blowup on extreme cases
+        // while still finding merges for most real code.
+        let mut count = 0;
         while let Some(node) = stack.pop() {
+            if count > 512 { break; }
             if visited.insert(node) {
+                count += 1;
                 if let Some(succs) = self.succs.get(node) {
                     for &s in succs {
                         if !self.back_edges.contains(&(node, s)) {
@@ -311,21 +320,17 @@ impl<'a> CfgGraph<'a> {
 
     /// Blocks between `start` (exclusive) and `end` (exclusive), dominated by `start`
     pub fn collect_region(&self, start: &'a str, end: Option<&'a str>) -> Vec<&'a str> {
-        let rpo_idx: FnvHashMap<&str, usize> = self.order.iter()
-            .enumerate().map(|(i, &s)| (s, i)).collect();
-
-        let start_idx = *rpo_idx.get(start).unwrap_or(&0);
-        let end_idx = end.and_then(|e| rpo_idx.get(e)).copied().unwrap_or(usize::MAX);
+        let start_idx = *self.rpo_indices.get(start).unwrap_or(&0);
+        let end_idx = end.and_then(|e| self.rpo_indices.get(e)).copied().unwrap_or(usize::MAX);
 
         let mut region: Vec<&str> = self.order.iter()
-            .copied()
-            .filter(|&n| {
-                let idx = *rpo_idx.get(n).unwrap_or(&0);
-                idx > start_idx && idx < end_idx && self.dominates(start, n) && n != start
+            .enumerate()
+            .filter(|(idx, n)| {
+                *idx > start_idx && *idx < end_idx && self.dominates(start, n) && n != &&start
             })
+            .map(|(_, n)| *n)
             .collect();
 
-        region.sort_by_key(|n| *rpo_idx.get(*n).unwrap_or(&0));
         region
     }
 }
@@ -600,6 +605,7 @@ fn structure_region<'a>(
             _ => {
                 for &s in &fwd_succs {
                     if Some(s) != merge && depth < MAX_DEPTH {
+                        // Reuse visited set where possible by passing it rather than cloning (Delta approach)
                         let sub = structure_region(graph, s, merge, visited, func, depth + 1);
                         result.extend(sub);
                     } else if Some(s) != merge {
@@ -635,20 +641,17 @@ fn structure_region_list<'a>(
 /// Collect nodes belonging to a conditional arm (between start and merge)
 fn collect_arm<'a>(graph: &CfgGraph<'a>, start: &'a str, merge: Option<&'a str>) -> Vec<&'a str> {
     if Some(start) == merge { return vec![]; }
-    let rpo_idx: FnvHashMap<&str, usize> = graph.order.iter()
-        .enumerate().map(|(i, &s)| (s, i)).collect();
+    let start_idx = *graph.rpo_indices.get(start).unwrap_or(&0);
+    let end_idx = merge.and_then(|e| graph.rpo_indices.get(e)).copied().unwrap_or(usize::MAX);
 
-    let start_idx = *rpo_idx.get(start).unwrap_or(&0);
-    let end_idx = merge.and_then(|e| rpo_idx.get(e)).copied().unwrap_or(usize::MAX);
-
-    let mut arm: Vec<&str> = graph.order.iter()
+    let arm: Vec<&str> = graph.order.iter()
         .copied()
-        .filter(|&n| {
-            let idx = *rpo_idx.get(n).unwrap_or(&0);
-            idx >= start_idx && idx < end_idx
+        .enumerate()
+        .filter(|(idx, _n)| {
+            *idx >= start_idx && *idx < end_idx
         })
+        .map(|(_, n)| n)
         .collect();
-    arm.sort_by_key(|n| *rpo_idx.get(*n).unwrap_or(&0));
     arm
 }
 

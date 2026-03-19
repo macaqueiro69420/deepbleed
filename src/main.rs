@@ -225,6 +225,33 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }).collect();
 
+    let mut json_functions = json_functions;
+
+    // ━━━ PHASE 4.5: Descendant Wrapper Naming ━━━
+    for i in 0..json_functions.len() {
+        if json_functions[i].name.starts_with("sub_") {
+            let mut called_ext = FnvHashSet::default();
+            for b in &json_functions[i].blocks {
+                for ins in &b.instructions {
+                    if ins.op == "call" {
+                        if let Some(t) = ins.resolved_name.as_ref() {
+                            if crate::entry_hunter::is_likely_external(t, 0, &external_names) {
+                                called_ext.insert(t.clone());
+                            }
+                        }
+                    }
+                }
+            }
+            if called_ext.len() == 1 {
+                let ext = called_ext.into_iter().next().unwrap();
+                let clean = ext.replace(|c: char| !c.is_alphanumeric(), "_").trim_start_matches('_').to_string();
+                if !clean.is_empty() && clean != "text" {
+                    json_functions[i].name = format!("sub_{}_wrapper", clean);
+                }
+            }
+        }
+    }
+
     // ━━━ Build JSON ━━━
     let file_name = std::path::Path::new(path).file_name()
         .unwrap_or_default().to_string_lossy().to_string();
@@ -291,19 +318,35 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n[*] IR JSON: {} ({} bytes)", json_path, json_str.len());
 
     // ━━━ PHASE 5: Generate C pseudocode (large-stack thread for deep recursion) ━━━
-    println!("[*] PHASE 5: Generating C pseudocode...");
+    println!("[*] PHASE 5: Generating C pseudocode (Parallel)...");
     let c_code = {
         let json_ref = &json_output;
         let res_ref  = &resolved;
         let sig_db   = signatures::SignatureDatabase::new();
-        std::thread::scope(|s| {
+        
+        // 1. Generate Header & Forward Decls (Serial/Fast)
+        let mut full_c = generate_c_header(json_ref);
+        full_c.push_str(&generate_c_forward_decls(json_ref, res_ref, &sig_db));
+
+        // 2. Generate Functions (Parallel/Heavy)
+        let functions_c: Vec<String> = std::thread::scope(|s| {
             std::thread::Builder::new()
-                .stack_size(128 * 1024 * 1024) // 128 MB stack
-                .spawn_scoped(s, move || generate_c(json_ref, res_ref, &sig_db))
+                .stack_size(128 * 1024 * 1024) // 128 MB stack per thread
+                .spawn_scoped(s, move || {
+                    json_ref.functions.par_iter().map(|func| {
+                        generate_function_string(func, res_ref, &sig_db)
+                    }).collect()
+                })
                 .expect("spawn")
                 .join()
                 .expect("codegen thread")
-        })
+        });
+
+        // 3. Join
+        for func_s in functions_c {
+            full_c.push_str(&func_s);
+        }
+        full_c
     };
 
 

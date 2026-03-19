@@ -75,6 +75,8 @@ fn extract_symbols(obj: &object::File<'_>, data: &mut ResolvedData) {
     for sym in obj.symbols() {
         if let Ok(name) = sym.name() {
             if !name.is_empty() && sym.address() != 0 {
+                // Ignore section symbols
+                if name.starts_with(".text") || name.starts_with(".data") || name == ".rdata" { continue; }
                 data.names.entry(sym.address()).or_insert_with(|| name.to_string());
             }
         }

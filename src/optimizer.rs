@@ -188,19 +188,8 @@ pub fn apply_dce(block: &mut BasicBlock) -> usize {
             IRInsn::Nop => false,
             // Self-assignment is dead (mov rax, rax)
             IRInsn::Assign { dst, src } if dst == src => false,
-            // SSA var that is never read downstream
-            IRInsn::Assign { dst: Operand::SSAVar(name), .. }
-            | IRInsn::Add { dst: Operand::SSAVar(name), .. }
-            | IRInsn::Sub { dst: Operand::SSAVar(name), .. }
-            | IRInsn::Mul { dst: Operand::SSAVar(name), .. }
-            | IRInsn::Div { dst: Operand::SSAVar(name), .. }
-            | IRInsn::And { dst: Operand::SSAVar(name), .. }
-            | IRInsn::Or  { dst: Operand::SSAVar(name), .. }
-            | IRInsn::Xor { dst: Operand::SSAVar(name), .. }
-            | IRInsn::Not { dst: Operand::SSAVar(name), .. }
-            | IRInsn::Shl { dst: Operand::SSAVar(name), .. }
-            | IRInsn::Shr { dst: Operand::SSAVar(name), .. }
-            | IRInsn::Sar { dst: Operand::SSAVar(name), .. } => {
+            // SSA var that is never read downstream (only safely delete pure Assigns for now)
+            IRInsn::Assign { dst: Operand::SSAVar(name), .. } => {
                 // Keep if it's FLAGS (side effects matter for CMP chains)
                 if name.starts_with("flags") { return true; }
                 used_vars.contains(name)
