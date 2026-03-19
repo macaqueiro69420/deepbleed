@@ -4,6 +4,7 @@ mod optimizer;
 mod entry_hunter;
 mod resolver;
 mod codegen;
+mod structurer;
 
 use crate::entry_hunter::*;
 use crate::lifter::*;
@@ -288,9 +289,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     std::fs::write(&json_path, &json_str)?;
     println!("\n[*] IR JSON: {} ({} bytes)", json_path, json_str.len());
 
-    // ━━━ PHASE 5: Generate C pseudocode ━━━
+    // ━━━ PHASE 5: Generate C pseudocode (large-stack thread for deep recursion) ━━━
     println!("[*] PHASE 5: Generating C pseudocode...");
-    let c_code = generate_c(&json_output, &resolved);
+    let c_code = {
+        let json_ref = &json_output;
+        let res_ref  = &resolved;
+        std::thread::scope(|s| {
+            std::thread::Builder::new()
+                .stack_size(128 * 1024 * 1024) // 128 MB stack
+                .spawn_scoped(s, move || generate_c(json_ref, res_ref))
+                .expect("spawn")
+                .join()
+                .expect("codegen thread")
+        })
+    };
+
+
     let c_path = format!("{}.decompiled.c", base_output);
     std::fs::write(&c_path, &c_code)?;
     println!("[*] C output: {} ({} bytes)", c_path, c_code.len());

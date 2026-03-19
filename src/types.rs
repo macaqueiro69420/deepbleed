@@ -202,7 +202,7 @@ pub struct BinaryInfo {
     pub main_address: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JsonFunction {
     pub address: String,
     pub name: String,
@@ -212,14 +212,14 @@ pub struct JsonFunction {
     pub ssa_vars: Vec<SsaVarInfo>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JsonBlock {
     pub id: String,
     pub address: String,
     pub instructions: Vec<JsonInstruction>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JsonInstruction {
     pub addr: String,
     pub op: String,
@@ -233,7 +233,7 @@ pub struct JsonInstruction {
     pub metadata: Option<InsnMetadata>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InsnMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ascii: Option<String>,
@@ -241,7 +241,7 @@ pub struct InsnMetadata {
     pub constant_value: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CfgEdge {
     pub from: String,
     pub to: String,
@@ -249,7 +249,7 @@ pub struct CfgEdge {
     pub edge_type: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SsaVarInfo {
     pub name: String,
     pub register: String,
