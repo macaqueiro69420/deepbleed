@@ -68,6 +68,12 @@ impl Lifter {
             return Operand::GlobalVar(abs_addr);
         }
 
+        // Absolute address reference (base=NONE, index=NONE) — common in 32-bit for
+        // IAT calls (CALL [0x10078000]) and global data access
+        if base == zydis::Register::NONE && index == zydis::Register::NONE {
+            return Operand::GlobalVar(disp as u32 as u64);
+        }
+
         let base_reg = Self::get_register(base);
         Operand::Deref(Box::new(Operand::Reg(base_reg)), disp)
     }

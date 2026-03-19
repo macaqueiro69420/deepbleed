@@ -2,10 +2,14 @@ mod types;
 mod lifter;
 mod optimizer;
 mod entry_hunter;
+mod resolver;
+mod codegen;
 
 use crate::entry_hunter::*;
 use crate::lifter::*;
 use crate::optimizer::*;
+use crate::resolver::*;
+use crate::codegen::*;
 use crate::types::*;
 
 use dashmap::DashMap;
@@ -13,6 +17,7 @@ use fnv::{FnvHashMap, FnvHashSet};
 use memmap2::Mmap;
 use object::{File, Object, ObjectSection, SectionKind};
 use rayon::prelude::*;
+use std::collections::BTreeMap;
 use std::fs::File as StdFile;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -21,15 +26,15 @@ const CHUNK_SIZE: usize = 16 * 1024;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = std::env::args().collect();
     if args.len() < 2 {
-        eprintln!("Usage: deepbleed <path_to_pe_file> [--output <ir.json>]");
+        eprintln!("Usage: deepbleed <path_to_pe_file> [--output <base_name>]");
         std::process::exit(1);
     }
 
     let path = &args[1];
     println!("╔══════════════════════════════════════════════════════╗");
-    println!("║  DEEP_BLEED v0.4.0 — Aggressive Decompilation Engine ║");
-    println!("║  Mode: IR Lifting + SSA + DCE + ConstProp            ║");
-    println!("║  Hyper-Parallel: ENABLED (Rayon + FnvHash)           ║");
+    println!("║  DEEP_BLEED v0.5.0 — Aggressive Decompilation Engine ║");
+    println!("║  Mode: IR + SSA + DCE + ConstProp + Strings + C Gen  ║");
+    println!("║  Output: .ir.json + .decompiled.c                    ║");
     println!("╚══════════════════════════════════════════════════════╝");
     println!();
 
@@ -46,9 +51,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let arch_str = format!("{:?}", obj.architecture());
     println!("[+] Architecture: {}", arch_str);
 
+    // ━━━ PHASE 0: Resolve ALL data (strings, imports, exports) ━━━
+    println!("\n[*] PHASE 0: Extracting strings, imports, exports...");
+    let resolved = build_resolved_data(&mmap, &obj);
+
     // ━━━ Build external library signatures ━━━
     let external_names = build_external_set(&obj);
-    println!("[+] Known external symbols: {}", external_names.len());
+    println!("[+] Known external symbol patterns: {}", external_names.len());
 
     // ━━━ Find executable sections ━━━
     let exec_sections: Vec<_> = obj.sections()
@@ -85,9 +94,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    println!("[*] Code chunks for parallel execution: {}", code_chunks.len());
+    println!("[*] Code chunks: {}", code_chunks.len());
 
-    // ━━━ PHASE 1: Parallel CFG analysis (burn the CPU) ━━━
+    // ━━━ PHASE 1: Parallel CFG analysis ━━━
     println!("\n[*] PHASE 1: Parallel CFG Analysis...");
     let total_inst = AtomicUsize::new(0);
     let leaders_map: DashMap<u64, (), fnv::FnvBuildHasher> = DashMap::with_hasher(Default::default());
@@ -107,9 +116,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     });
 
-    println!("[!] CFG analysis complete: {} instructions scanned", total_inst.load(Ordering::SeqCst));
+    println!("[!] CFG: {} instructions scanned", total_inst.load(Ordering::SeqCst));
 
-    // ━━━ PHASE 2: Entry Point & main() detection ━━━
+    // ━━━ PHASE 2: Entry Point & main() ━━━
     println!("\n[*] PHASE 2: Entry Point Hunting...");
     let entry_info = find_entry_and_main(
         &obj, &mmap, machine_mode, stack_width,
@@ -117,28 +126,34 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     // ━━━ PHASE 3: Function discovery ━━━
-    println!("\n[*] PHASE 3: Function Discovery & Classification...");
+    println!("\n[*] PHASE 3: Function Discovery...");
     let unique_leaders: FnvHashSet<u64> = leaders_map.iter().map(|e| *e.key()).collect();
     let call_targets_fnv: FnvHashMap<u64, u32> = call_targets_map.iter()
         .map(|e| (*e.key(), *e.value())).collect();
 
-    let functions = discover_functions(
+    let mut functions = discover_functions(
         &call_targets_fnv, &entry_info, &external_names, &unique_leaders,
     );
 
+    // Rename functions using exports
+    for func in &mut functions {
+        if let Some(export_name) = resolved.exports.get(&func.address) {
+            func.name = export_name.clone();
+        }
+    }
+
     let user_funcs = functions.iter().filter(|f| f.kind != FunctionKind::ExternalLib).count();
     let ext_funcs = functions.iter().filter(|f| f.kind == FunctionKind::ExternalLib).count();
-    println!("[+] Total functions: {} (USER: {}, EXTERNAL_LIB: {})", functions.len(), user_funcs, ext_funcs);
+    println!("[+] Functions: {} (USER: {}, EXTERNAL_LIB: {})", functions.len(), user_funcs, ext_funcs);
 
     // ━━━ PHASE 4: Parallel IR Lifting + Optimization ━━━
-    println!("\n[*] PHASE 4: Parallel IR Lifting + SSA + DCE + ConstProp...");
+    println!("\n[*] PHASE 4: Parallel IR Lifting + Optimization...");
     let global_dce = AtomicUsize::new(0);
     let global_constprop = AtomicUsize::new(0);
     let global_nops = AtomicUsize::new(0);
     let global_ir_insns = AtomicUsize::new(0);
     let global_blocks = AtomicUsize::new(0);
 
-    // Only lift USER functions (skip EXTERNAL_LIB)
     let user_functions: Vec<&FunctionInfo> = functions.iter()
         .filter(|f| f.kind != FunctionKind::ExternalLib)
         .collect();
@@ -149,7 +164,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let mut all_ssa_vars = Vec::new();
 
         for &block_addr in &func.block_addrs {
-            // Find the chunk containing this block
             for chunk in &code_chunks {
                 if block_addr >= chunk.address && block_addr < chunk.address + chunk.size as u64 {
                     let end = chunk.offset + chunk.size;
@@ -157,7 +171,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         let block_lifter = BlockLifter::new(machine_mode, stack_width, chunk.address);
                         let mut block = block_lifter.lift_basic_block(raw_code, block_addr);
 
-                        // Optimize: SSA + ConstProp + DCE
                         let (ssa_vars, stats) = optimize_block(&mut block);
                         all_ssa_vars.extend(ssa_vars);
 
@@ -167,16 +180,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         global_ir_insns.fetch_add(block.ir_instructions.len(), Ordering::Relaxed);
                         global_blocks.fetch_add(1, Ordering::Relaxed);
 
-                        // Build CFG edges
                         let block_id = format!("bb_{:X}", block.start_addr);
                         for edge in &block.edges {
                             let edge_type = if block.ir_instructions.iter().any(|i| matches!(i, IRInsn::Call { .. })) {
                                 "call"
                             } else if block.ir_instructions.iter().any(|i| matches!(i, IRInsn::CondJump { .. })) {
                                 "branch"
-                            } else {
-                                "fallthrough"
-                            };
+                            } else { "fallthrough" };
                             cfg_links.push(CfgEdge {
                                 from: block_id.clone(),
                                 to: format!("bb_{:X}", edge),
@@ -184,10 +194,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             });
                         }
 
-                        // Convert to JSON instructions
                         let json_insns: Vec<JsonInstruction> = block.ir_instructions.iter()
                             .filter(|i| !matches!(i, IRInsn::Label { .. }))
-                            .map(|i| ir_to_json_instruction(i, block.start_addr))
+                            .map(|i| ir_to_json_instruction(i, block.start_addr, &resolved))
                             .collect();
 
                         json_blocks.push(JsonBlock {
@@ -201,7 +210,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
 
-        // Deduplicate SSA vars
         let mut seen_ssa: FnvHashSet<String> = FnvHashSet::default();
         all_ssa_vars.retain(|v| seen_ssa.insert(v.name.clone()));
 
@@ -215,9 +223,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }).collect();
 
-    // ━━━ Build final JSON ━━━
+    // ━━━ Build JSON ━━━
     let file_name = std::path::Path::new(path).file_name()
         .unwrap_or_default().to_string_lossy().to_string();
+
+    // Build resolution tables for JSON
+    let imports_table: BTreeMap<String, String> = resolved.imports.iter()
+        .map(|(k, v)| (format!("0x{:X}", k), v.clone())).collect();
+    let exports_table: BTreeMap<String, String> = resolved.exports.iter()
+        .map(|(k, v)| (format!("0x{:X}", k), v.clone())).collect();
+    let strings_table: BTreeMap<String, String> = resolved.strings.iter()
+        .filter(|(_, v)| v.len() >= 4 && v.len() <= 256) // Only meaningful strings
+        .map(|(k, v)| (format!("0x{:X}", k), v.clone())).collect();
 
     let json_output = JsonOutput {
         binary_info: BinaryInfo {
@@ -238,215 +255,150 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             constants_propagated: global_constprop.load(Ordering::SeqCst),
             nops_removed: global_nops.load(Ordering::SeqCst),
         },
+        imports: imports_table,
+        exports: exports_table,
+        strings: strings_table,
     };
 
     // ━━━ Print summary ━━━
     println!();
     println!("╔══════════════════════════════════════════════════════╗");
-    println!("║             DEEP_BLEED ANALYSIS RESULTS              ║");
+    println!("║             DEEP_BLEED v0.5.0 RESULTS                ║");
     println!("╠══════════════════════════════════════════════════════╣");
-    println!("║ Total Functions:         {:>28} ║", json_output.stats.total_functions);
-    println!("║ User Functions:          {:>28} ║", json_output.stats.user_functions);
-    println!("║ External (skipped):      {:>28} ║", json_output.stats.external_functions);
-    println!("║ Total Basic Blocks:      {:>28} ║", json_output.stats.total_blocks);
-    println!("║ Total IR Instructions:   {:>28} ║", json_output.stats.total_ir_instructions);
-    println!("║ DCE Eliminated:          {:>28} ║", json_output.stats.dce_eliminated);
-    println!("║ Constants Propagated:    {:>28} ║", json_output.stats.constants_propagated);
-    println!("║ NOPs Removed:            {:>28} ║", json_output.stats.nops_removed);
+    println!("║ Functions:       {:>6} user / {:>6} external        ║", json_output.stats.user_functions, json_output.stats.external_functions);
+    println!("║ Basic Blocks:    {:>35} ║", json_output.stats.total_blocks);
+    println!("║ IR Instructions: {:>35} ║", json_output.stats.total_ir_instructions);
+    println!("║ DCE Eliminated:  {:>35} ║", json_output.stats.dce_eliminated);
+    println!("║ ConstProp:       {:>35} ║", json_output.stats.constants_propagated);
+    println!("║ NOPs Removed:    {:>35} ║", json_output.stats.nops_removed);
+    println!("║ Strings Found:   {:>35} ║", resolved.strings.len());
+    println!("║ Imports Resolved:{:>35} ║", resolved.imports.len());
+    println!("║ Exports Resolved:{:>35} ║", resolved.exports.len());
     println!("╚══════════════════════════════════════════════════════╝");
 
     // ━━━ Write JSON ━━━
-    let output_path = if args.len() > 2 && args[2] == "--output" {
-        args.get(3).cloned().unwrap_or_else(|| format!("{}.ir.json", path))
+    let base_output = if args.len() > 2 && args[2] == "--output" {
+        args.get(3).cloned().unwrap_or_else(|| path.clone())
     } else {
-        format!("{}.ir.json", path)
+        path.clone()
     };
 
+    let json_path = format!("{}.ir.json", base_output);
     let json_str = serde_json::to_string_pretty(&json_output)?;
-    std::fs::write(&output_path, &json_str)?;
-    println!("\n[*] IR JSON written to: {}", output_path);
-    println!("[*] JSON size: {} bytes", json_str.len());
-    println!("[*] Ready for LLM consumption.");
+    std::fs::write(&json_path, &json_str)?;
+    println!("\n[*] IR JSON: {} ({} bytes)", json_path, json_str.len());
+
+    // ━━━ PHASE 5: Generate C pseudocode ━━━
+    println!("[*] PHASE 5: Generating C pseudocode...");
+    let c_code = generate_c(&json_output, &resolved);
+    let c_path = format!("{}.decompiled.c", base_output);
+    std::fs::write(&c_path, &c_code)?;
+    println!("[*] C output: {} ({} bytes)", c_path, c_code.len());
+
+    println!("[*] Done. Ready for LLM consumption.");
 
     Ok(())
 }
 
-/// Convert an IR instruction to JSON format
-fn ir_to_json_instruction(insn: &IRInsn, block_addr: u64) -> JsonInstruction {
+/// Convert an IR instruction to JSON, with resolved names and string references
+fn ir_to_json_instruction(insn: &IRInsn, block_addr: u64, resolved: &ResolvedData) -> JsonInstruction {
     let addr_str = format!("0x{:X}", block_addr);
 
+    // Helper: resolve an operand, extracting string refs and import names
+    let resolve_op = |op: &Operand| -> (String, Option<String>, Option<String>) {
+        let text = op.to_string();
+        match op {
+            Operand::GlobalVar(addr) => {
+                let name = resolved.resolve_addr(*addr).map(|s| s.to_string());
+                let string = resolved.resolve_string(*addr).map(|s| s.to_string());
+                (text, name, string)
+            }
+            Operand::UImm(val) => {
+                let name = resolved.resolve_addr(*val).map(|s| s.to_string());
+                let string = resolved.resolve_string(*val).map(|s| s.to_string());
+                (text, name, string)
+            }
+            _ => (text, None, None),
+        }
+    };
+
     match insn {
-        IRInsn::Assign { dst, src } => JsonInstruction {
-            addr: addr_str, op: "assign".into(),
-            dst: Some(dst.to_string()), src: vec![src.to_string()],
-            metadata: try_ascii_metadata(src),
-        },
-        IRInsn::Add { dst, lhs, rhs } => JsonInstruction {
-            addr: addr_str, op: "add".into(),
-            dst: Some(dst.to_string()), src: vec![lhs.to_string(), rhs.to_string()],
-            metadata: None,
-        },
-        IRInsn::Sub { dst, lhs, rhs } => JsonInstruction {
-            addr: addr_str, op: "sub".into(),
-            dst: Some(dst.to_string()), src: vec![lhs.to_string(), rhs.to_string()],
-            metadata: None,
-        },
-        IRInsn::Mul { dst, lhs, rhs } => JsonInstruction {
-            addr: addr_str, op: "mul".into(),
-            dst: Some(dst.to_string()), src: vec![lhs.to_string(), rhs.to_string()],
-            metadata: None,
-        },
-        IRInsn::Div { dst, lhs, rhs } => JsonInstruction {
-            addr: addr_str, op: "div".into(),
-            dst: Some(dst.to_string()), src: vec![lhs.to_string(), rhs.to_string()],
-            metadata: None,
-        },
-        IRInsn::And { dst, lhs, rhs } => JsonInstruction {
-            addr: addr_str, op: "and".into(),
-            dst: Some(dst.to_string()), src: vec![lhs.to_string(), rhs.to_string()],
-            metadata: None,
-        },
-        IRInsn::Or { dst, lhs, rhs } => JsonInstruction {
-            addr: addr_str, op: "or".into(),
-            dst: Some(dst.to_string()), src: vec![lhs.to_string(), rhs.to_string()],
-            metadata: None,
-        },
-        IRInsn::Xor { dst, lhs, rhs } => JsonInstruction {
-            addr: addr_str, op: "xor".into(),
-            dst: Some(dst.to_string()), src: vec![lhs.to_string(), rhs.to_string()],
-            metadata: None,
-        },
-        IRInsn::Not { dst, src } => JsonInstruction {
-            addr: addr_str, op: "not".into(),
-            dst: Some(dst.to_string()), src: vec![src.to_string()],
-            metadata: None,
-        },
-        IRInsn::Shl { dst, lhs, rhs } => JsonInstruction {
-            addr: addr_str, op: "shl".into(),
-            dst: Some(dst.to_string()), src: vec![lhs.to_string(), rhs.to_string()],
-            metadata: None,
-        },
-        IRInsn::Shr { dst, lhs, rhs } => JsonInstruction {
-            addr: addr_str, op: "shr".into(),
-            dst: Some(dst.to_string()), src: vec![lhs.to_string(), rhs.to_string()],
-            metadata: None,
-        },
-        IRInsn::Sar { dst, lhs, rhs } => JsonInstruction {
-            addr: addr_str, op: "sar".into(),
-            dst: Some(dst.to_string()), src: vec![lhs.to_string(), rhs.to_string()],
-            metadata: None,
-        },
-        IRInsn::Load { dst, src } => JsonInstruction {
-            addr: addr_str, op: "load".into(),
-            dst: Some(dst.to_string()), src: vec![src.to_string()],
-            metadata: None,
-        },
-        IRInsn::Store { dst, src } => JsonInstruction {
-            addr: addr_str, op: "store".into(),
-            dst: Some(dst.to_string()), src: vec![src.to_string()],
-            metadata: None,
-        },
-        IRInsn::Lea { dst, src } => JsonInstruction {
-            addr: addr_str, op: "lea".into(),
-            dst: Some(dst.to_string()), src: vec![src.to_string()],
-            metadata: None,
-        },
-        IRInsn::Call { target } => JsonInstruction {
-            addr: addr_str, op: "call".into(),
-            dst: None, src: vec![target.to_string()],
-            metadata: None,
-        },
-        IRInsn::Jump { target } => JsonInstruction {
-            addr: addr_str, op: "jump".into(),
-            dst: None, src: vec![format!("0x{:X}", target)],
-            metadata: None,
-        },
-        IRInsn::CondJump { target, condition } => JsonInstruction {
-            addr: addr_str, op: "cond_jump".into(),
-            dst: None, src: vec![format!("0x{:X}", target), condition.clone()],
-            metadata: None,
-        },
-        IRInsn::Return => JsonInstruction {
-            addr: addr_str, op: "ret".into(),
-            dst: None, src: vec![],
-            metadata: None,
-        },
-        IRInsn::Push { src } => JsonInstruction {
-            addr: addr_str, op: "push".into(),
-            dst: None, src: vec![src.to_string()],
-            metadata: None,
-        },
-        IRInsn::Pop { dst } => JsonInstruction {
-            addr: addr_str, op: "pop".into(),
-            dst: Some(dst.to_string()), src: vec![],
-            metadata: None,
-        },
-        IRInsn::Cmp { lhs, rhs } => JsonInstruction {
-            addr: addr_str, op: "cmp".into(),
-            dst: None, src: vec![lhs.to_string(), rhs.to_string()],
-            metadata: try_ascii_metadata(rhs),
-        },
-        IRInsn::Test { lhs, rhs } => JsonInstruction {
-            addr: addr_str, op: "test".into(),
-            dst: None, src: vec![lhs.to_string(), rhs.to_string()],
-            metadata: None,
-        },
-        IRInsn::SetCC { dst, condition } => JsonInstruction {
-            addr: addr_str, op: format!("set{}", condition.to_lowercase()),
-            dst: Some(dst.to_string()), src: vec![],
-            metadata: None,
-        },
-        IRInsn::Movzx { dst, src } => JsonInstruction {
-            addr: addr_str, op: "movzx".into(),
-            dst: Some(dst.to_string()), src: vec![src.to_string()],
-            metadata: None,
-        },
-        IRInsn::Movsx { dst, src } => JsonInstruction {
-            addr: addr_str, op: "movsx".into(),
-            dst: Some(dst.to_string()), src: vec![src.to_string()],
-            metadata: None,
-        },
-        IRInsn::Movabs { dst, src } => JsonInstruction {
-            addr: addr_str, op: "movabs".into(),
-            dst: Some(dst.to_string()), src: vec![format!("0x{:X}", src)],
-            metadata: try_ascii_u64(*src),
-        },
-        IRInsn::Unknown { asm, addr } => JsonInstruction {
-            addr: format!("0x{:X}", addr), op: "unknown".into(),
-            dst: None, src: vec![asm.clone()],
-            metadata: None,
-        },
-        _ => JsonInstruction {
-            addr: addr_str, op: "nop".into(),
-            dst: None, src: vec![],
-            metadata: None,
-        },
+        IRInsn::Call { target } => {
+            let (text, name, string) = resolve_op(target);
+            JsonInstruction {
+                addr: addr_str, op: "call".into(), dst: None,
+                src: vec![text], resolved_name: name, string_ref: string, metadata: None,
+            }
+        }
+        IRInsn::Assign { dst, src } => {
+            let (src_text, name, string) = resolve_op(src);
+            let (dst_text, _, _) = resolve_op(dst);
+            JsonInstruction {
+                addr: addr_str, op: "assign".into(), dst: Some(dst_text),
+                src: vec![src_text], resolved_name: name, string_ref: string, metadata: None,
+            }
+        }
+        IRInsn::Push { src } => {
+            let (text, name, string) = resolve_op(src);
+            JsonInstruction {
+                addr: addr_str, op: "push".into(), dst: None,
+                src: vec![text], resolved_name: name, string_ref: string, metadata: None,
+            }
+        }
+        IRInsn::Lea { dst, src } => {
+            let (src_text, name, string) = resolve_op(src);
+            JsonInstruction {
+                addr: addr_str, op: "lea".into(), dst: Some(dst.to_string()),
+                src: vec![src_text], resolved_name: name, string_ref: string, metadata: None,
+            }
+        }
+        IRInsn::Cmp { lhs, rhs } => {
+            let (lhs_text, _, _) = resolve_op(lhs);
+            let (rhs_text, name, string) = resolve_op(rhs);
+            JsonInstruction {
+                addr: addr_str, op: "cmp".into(), dst: None,
+                src: vec![lhs_text, rhs_text], resolved_name: name, string_ref: string, metadata: None,
+            }
+        }
+        // For all other ops, use the generic handler
+        _ => ir_to_json_generic(insn, addr_str),
     }
 }
 
-/// Try to extract ASCII representation from immediate values
-fn try_ascii_metadata(op: &Operand) -> Option<InsnMetadata> {
-    match op {
-        Operand::UImm(val) => try_ascii_u64(*val),
-        Operand::Imm(val) => try_ascii_u64(*val as u64),
-        _ => None,
-    }
-}
-
-fn try_ascii_u64(val: u64) -> Option<InsnMetadata> {
-    if val == 0 { return None; }
-    let bytes = val.to_le_bytes();
-    let ascii: String = bytes.iter()
-        .take_while(|&&b| b != 0)
-        .filter(|&&b| b >= 0x20 && b <= 0x7E)
-        .map(|&b| b as char)
-        .collect();
-    if ascii.len() >= 2 {
-        Some(InsnMetadata {
-            ascii: Some(ascii),
-            constant_value: Some(format!("0x{:X}", val)),
-        })
-    } else {
-        None
+fn ir_to_json_generic(insn: &IRInsn, addr_str: String) -> JsonInstruction {
+    let mk = |op: &str, dst: Option<String>, src: Vec<String>| JsonInstruction {
+        addr: addr_str.clone(), op: op.into(), dst, src,
+        resolved_name: None, string_ref: None, metadata: None,
+    };
+    match insn {
+        IRInsn::Add { dst, lhs, rhs } => mk("add", Some(dst.to_string()), vec![lhs.to_string(), rhs.to_string()]),
+        IRInsn::Sub { dst, lhs, rhs } => mk("sub", Some(dst.to_string()), vec![lhs.to_string(), rhs.to_string()]),
+        IRInsn::Mul { dst, lhs, rhs } => mk("mul", Some(dst.to_string()), vec![lhs.to_string(), rhs.to_string()]),
+        IRInsn::Div { dst, lhs, rhs } => mk("div", Some(dst.to_string()), vec![lhs.to_string(), rhs.to_string()]),
+        IRInsn::And { dst, lhs, rhs } => mk("and", Some(dst.to_string()), vec![lhs.to_string(), rhs.to_string()]),
+        IRInsn::Or  { dst, lhs, rhs } => mk("or",  Some(dst.to_string()), vec![lhs.to_string(), rhs.to_string()]),
+        IRInsn::Xor { dst, lhs, rhs } => mk("xor", Some(dst.to_string()), vec![lhs.to_string(), rhs.to_string()]),
+        IRInsn::Not { dst, src } => mk("not", Some(dst.to_string()), vec![src.to_string()]),
+        IRInsn::Shl { dst, lhs, rhs } => mk("shl", Some(dst.to_string()), vec![lhs.to_string(), rhs.to_string()]),
+        IRInsn::Shr { dst, lhs, rhs } => mk("shr", Some(dst.to_string()), vec![lhs.to_string(), rhs.to_string()]),
+        IRInsn::Sar { dst, lhs, rhs } => mk("sar", Some(dst.to_string()), vec![lhs.to_string(), rhs.to_string()]),
+        IRInsn::Load { dst, src } => mk("load", Some(dst.to_string()), vec![src.to_string()]),
+        IRInsn::Store { dst, src } => mk("store", Some(dst.to_string()), vec![src.to_string()]),
+        IRInsn::Jump { target } => mk("jump", None, vec![format!("0x{:X}", target)]),
+        IRInsn::CondJump { target, condition } => mk("cond_jump", None, vec![format!("0x{:X}", target), condition.clone()]),
+        IRInsn::Return => mk("ret", None, vec![]),
+        IRInsn::Pop { dst } => mk("pop", Some(dst.to_string()), vec![]),
+        IRInsn::Test { lhs, rhs } => mk("test", None, vec![lhs.to_string(), rhs.to_string()]),
+        IRInsn::SetCC { dst, condition } => mk(&format!("set{}", condition.to_lowercase()), Some(dst.to_string()), vec![]),
+        IRInsn::Movzx { dst, src } => mk("movzx", Some(dst.to_string()), vec![src.to_string()]),
+        IRInsn::Movsx { dst, src } => mk("movsx", Some(dst.to_string()), vec![src.to_string()]),
+        IRInsn::Movabs { dst, src } => mk("movabs", Some(dst.to_string()), vec![format!("0x{:X}", src)]),
+        IRInsn::Unknown { asm, addr } => {
+            JsonInstruction {
+                addr: format!("0x{:X}", addr), op: "unknown".into(), dst: None,
+                src: vec![asm.clone()], resolved_name: None, string_ref: None, metadata: None,
+            }
+        }
+        _ => mk("nop", None, vec![]),
     }
 }

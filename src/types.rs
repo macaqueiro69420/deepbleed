@@ -1,4 +1,5 @@
 use serde::{Serialize, Deserialize};
+use std::collections::BTreeMap;
 use std::fmt;
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -184,6 +185,12 @@ pub struct JsonOutput {
     pub binary_info: BinaryInfo,
     pub functions: Vec<JsonFunction>,
     pub stats: AnalysisStats,
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub imports: BTreeMap<String, String>,
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub exports: BTreeMap<String, String>,
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub strings: BTreeMap<String, String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -218,6 +225,11 @@ pub struct JsonInstruction {
     pub op: String,
     pub dst: Option<String>,
     pub src: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub resolved_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub string_ref: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub metadata: Option<InsnMetadata>,
 }
 
