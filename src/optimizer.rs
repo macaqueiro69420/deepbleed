@@ -192,6 +192,12 @@ pub fn apply_dce(block: &mut BasicBlock) -> usize {
             IRInsn::Assign { dst: Operand::SSAVar(name), .. } => {
                 // Keep if it's FLAGS (side effects matter for CMP chains)
                 if name.starts_with("flags") { return true; }
+                // Keep if it could be a function argument register
+                let n = name.to_lowercase();
+                if n.starts_with("rcx") || n.starts_with("rdx") || n.starts_with("r8") || n.starts_with("r9") ||
+                   n.starts_with("rdi") || n.starts_with("rsi") || n.starts_with("rax") || n.starts_with("xmm") {
+                    return true;
+                }
                 used_vars.contains(name)
             }
             _ => true,

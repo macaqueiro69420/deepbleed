@@ -318,11 +318,12 @@ fn collect_eax_before(insns: &[JsonInstruction], idx: usize) -> Option<String> {
 /// Look backwards for the last assignment to a specific register
 fn find_last_reg_assign(insns: &[JsonInstruction], idx: usize, reg_name: &str) -> Option<String> {
     for insn in insns[..idx].iter().rev() {
-        if insn.op == "assign" || insn.op == "movzx" || insn.op == "movsx" || insn.op == "lea" || insn.op == "movabs" || insn.op == "load" {
-            if let Some(dst) = &insn.dst {
-                if dst.contains(reg_name) {
-                    return insn.src.get(0).cloned();
+        if let Some(dst) = &insn.dst {
+            if dst.contains(reg_name) {
+                if insn.op == "assign" || insn.op == "movzx" || insn.op == "movsx" || insn.op == "lea" || insn.op == "movabs" || insn.op == "load" || insn.op == "add" || insn.op == "sub" {
+                    return insn.src.get(0).cloned().or_else(|| Some(dst.clone()));
                 }
+                return Some(dst.clone());
             }
         }
         if insn.op == "call" { break; } // Don't look past other calls
