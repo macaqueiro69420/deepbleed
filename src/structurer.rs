@@ -465,7 +465,7 @@ fn structure_region<'a>(
 ) -> Vec<CfgStructure> {
     // Depth limit: prevent stack overflow on large/complex CFGs
     // Fall back to flat block emission beyond this depth
-    const MAX_DEPTH: usize = 48;
+    const MAX_DEPTH: usize = 512;
 
     let mut result = Vec::new();
     let mut cur = start;

@@ -100,8 +100,9 @@ pub fn generate_function_string(func: &JsonFunction, resolved: &ResolvedData, si
 pub fn generate_function(c: &mut String, func_in: &JsonFunction, resolved: &ResolvedData, sig_db: &SignatureDatabase) {
     let mut func_val = func_in.clone();
     prepare_calls(&mut func_val, resolved, sig_db);
-    rename_ssa_vars(&mut func_val);
+    // CRITICAL: Fold BEFORE renaming to 't' vars, otherwise folding logic (checking for '_') fails.
     apply_expression_folding_c(&mut func_val, resolved);
+    rename_ssa_vars(&mut func_val);
     let func = &func_val;
 
     let fname = resolve_func_name(&func.name, &func.address, resolved);
@@ -860,7 +861,7 @@ fn apply_expression_folding_c(func: &mut JsonFunction, resolved: &ResolvedData) 
     let mut opt_iters = 0;
     loop {
         opt_iters += 1;
-        if opt_iters > 100 { break; } // FAILSafe to prevent absolute CPU hangs / OOMs on cyclic definitions
+        if opt_iters > 50 { break; } // Safe limit
 
         let mut use_count: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
         let mut defs: std::collections::HashMap<String, String> = std::collections::HashMap::new();
@@ -893,8 +894,13 @@ fn apply_expression_folding_c(func: &mut JsonFunction, resolved: &ResolvedData) 
                 for s in &mut insn.src {
                     let count = *use_count.get(s).unwrap_or(&0);
                     if let Some(rhs) = defs.get(s) {
-                        let is_simple = rhs.starts_with("0x") || rhs.parse::<i64>().is_ok() || (!rhs.contains(' ') && !rhs.contains('(') && !rhs.contains('[') && rhs.len() < 10);
-                        if count == 1 || is_simple {
+                        // More aggressive simple-expression detection
+                        let is_constant = rhs.starts_with("0x") || rhs.parse::<i64>().is_ok();
+                        let is_simple_reg = !rhs.contains(' ') && !rhs.contains('(') && !rhs.contains('[') && !rhs.contains('+') && !rhs.contains('-') && rhs.len() < 12;
+                        let is_simple = is_constant || is_simple_reg;
+
+                        // Strict: only fold if used exactly once, OR if it's a very small constant
+                        if count == 1 || (is_constant && rhs.len() < 12) {
                             if let Some(&(def_b, def_i)) = def_idx.get(s) {
                                 let safe_to_fold = (def_b == b_idx && def_i < i_idx) || (def_b != b_idx);
                                 if safe_to_fold {
@@ -951,6 +957,16 @@ fn generate_rhs_c(insn: &JsonInstruction, resolved: &ResolvedData) -> String {
         "and" => format!("{} & {}", s0, s1),
         "or"  => format!("{} | {}", s0, s1),
         "xor" => format!("{} ^ {}", s0, s1),
+        "load"    => format!("*({})", s0),
+        "call"    => {
+            let t = resolve_call_target(&s0, resolved);
+            // Check for arguments that might have been formatted into the src string
+            if s0.contains('(') && s0.contains(')') {
+                sanitize_c_ident(s0.split('(').next().unwrap_or(&s0)) + &s0[s0.find('(').unwrap_or(0)..]
+            } else {
+                format!("{}(?)", sanitize_c_ident(&t))
+            }
+        }
         "not" => format!("~{}", s0),
         "shl" => format!("{} << {}", s0, s1),
         "shr" => format!("(unsigned){} >> {}", s0, s1),
