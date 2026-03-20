@@ -112,7 +112,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let control_flow_map: DashMap<u64, ControlFlowInfo, fnv::FnvBuildHasher> =
         DashMap::with_hasher(Default::default());
 
-    code_chunks.par_iter().for_each(|chunk| {
+    code_chunks.iter().for_each(|chunk| {
         let end = chunk.offset + chunk.size;
         if let Some(raw_code) = mmap.get(chunk.offset..end) {
             let result = analyze_chunk(raw_code, chunk.address, machine_mode, stack_width);

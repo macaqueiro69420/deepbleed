@@ -688,41 +688,43 @@ fn resolve_operand_str(s: &str, resolved: &ResolvedData) -> String {
     }
 
     // LOW CONFIDENCE CHECK / AGGRESSIVE GUESSING
-    let re_hex = s.split(|c: char| !c.is_alphanumeric());
-    let mut replaced_s = s.to_string();
+    // Only scan for 0x-prefixed hex tokens — decimal numbers are almost always
+    // stack offsets or constants, NOT addresses, so parsing them caused a 917MB explosion.
     let mut low_conf_found = false;
     let mut low_conf_str = String::new();
     let mut direct_match = false;
+    let mut replaced_s = s.to_string();
 
-    for token in re_hex {
-        let addr_opt = if let Some(hex) = token
+    for token in s.split(|c: char| !c.is_alphanumeric()) {
+        let addr_opt: Option<u64> = if let Some(hex) = token
             .strip_prefix("0x")
             .or_else(|| token.strip_prefix("0X"))
         {
             u64::from_str_radix(hex, 16).ok()
         } else {
-            token.parse::<u64>().ok()
+            None // Never parse plain decimal as address — it explodes output size
         };
 
         if let Some(addr) = addr_opt {
-            if addr > 4096 {
-                // Ignore small numbers
+            if addr >= 0x1000 { // Ignore trivially small values
                 if let Some(string) = resolved.resolve_string(addr) {
                     low_conf_found = true;
                     low_conf_str = escape_c_string(&truncate(string, 120));
-                    if token == s || format!("0x{}", token) == s || format!("0X{}", token) == s {
+                    // Direct match: the whole operand IS that hex address
+                    if token == s.trim_start_matches("0x").trim_start_matches("0X") {
                         direct_match = true;
                     }
-                    // Attempt inline replacement
-                    let target_hex = format!("0x{:x}", addr);
+                    // One-shot inline replacement: replace the hex literal with the string
+                    // Use replacen(1) to prevent cascading expansions
+                    let target_hex_lo = format!("0x{:x}", addr);
                     let target_hex_up = format!("0x{:X}", addr);
-                    if replaced_s.contains(&target_hex) {
-                        replaced_s =
-                            replaced_s.replace(&target_hex, &format!("\"{}\"", low_conf_str));
+                    let quoted = format!("\"{}\"", low_conf_str);
+                    if replaced_s.contains(&target_hex_lo) {
+                        replaced_s = replaced_s.replacen(&target_hex_lo, &quoted, 1);
                     } else if replaced_s.contains(&target_hex_up) {
-                        replaced_s =
-                            replaced_s.replace(&target_hex_up, &format!("\"{}\"", low_conf_str));
+                        replaced_s = replaced_s.replacen(&target_hex_up, &quoted, 1);
                     }
+                    break; // Only use the first hit to avoid runaway expansion
                 }
             }
         }
