@@ -955,7 +955,11 @@ fn prepare_calls(func: &mut JsonFunction, resolved: &ResolvedData, sig_db: &Sign
                 let mut new_insn = insn.clone();
                 new_insn.dst = call_dst;
                 new_insn.string_ref = Some(formatted_call);
-                new_insn.src.extend(final_args); // For semantic info
+                // NOTE: Do NOT extend .src with final_args here. The args are
+                // already embedded in string_ref. Adding them to .src corrupts
+                // the expression folder's use-count pass and can trigger
+                // explosive string substitution chains.
+                new_insn.src.clear(); // Clear raw asm srcs — call is fully described by string_ref
                 new_insns.push(new_insn);
 
                 i += 1;
@@ -1245,16 +1249,12 @@ fn generate_rhs_c(insn: &JsonInstruction, resolved: &ResolvedData) -> String {
         "or" => format!("{} | {}", s0, s1),
         "xor" => format!("{} ^ {}", s0, s1),
         "load" => format!("*({})", s0),
-        "call" => {
-            let t = resolve_call_target(&s0, resolved);
-            // Check for arguments that might have been formatted into the src string
-            if s0.contains('(') && s0.contains(')') {
-                sanitize_c_ident(s0.split('(').next().unwrap_or(&s0))
-                    + &s0[s0.find('(').unwrap_or(0)..]
-            } else {
-                format!("{}(?)", sanitize_c_ident(&t))
-            }
-        }
+        // NOTE: call is handled via string_ref (set by prepare_calls). Do NOT
+        // try to re-derive args here — that's already done in prepare_calls.
+        "call" => insn
+            .string_ref
+            .clone()
+            .unwrap_or_else(|| "call(...)".to_string()),
         "not" => format!("~{}", s0),
         "shl" => format!("{} << {}", s0, s1),
         "shr" => format!("(unsigned){} >> {}", s0, s1),
@@ -1267,10 +1267,6 @@ fn generate_rhs_c(insn: &JsonInstruction, resolved: &ResolvedData) -> String {
                 format!("&{}", s0)
             }
         }
-        "call" => insn
-            .string_ref
-            .clone()
-            .unwrap_or_else(|| "call(...)".to_string()),
         _ => String::new(),
     }
 }
