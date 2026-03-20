@@ -769,30 +769,101 @@ pub fn is_prologue_epilogue_noise(insn: &JsonInstruction) -> bool {
 }
 
 pub fn prettify_operand(s: &str) -> String {
-    // Replace SSA-style rax_0 with just var_rax or keep as-is
-    // If it's a local_mXX (negative offset), show as var_N
+    // Replace SSA-style local_mXX → var_N
     if let Some(rest) = s.strip_prefix("local_m") {
         return format!("var_{}", rest);
     }
     if let Some(rest) = s.strip_prefix("local_") {
         return format!("arg_{}", rest);
     }
-    // Fix square brackets [rbx+0x10] -> *(uintptr_t*)(rbx+0x10)
+
+    // ── Simplify &*(uintptr_t*)(X+0x0) → X  (address-of-deref cancellation) ──
+    if let Some(inner) = s.strip_prefix("&*(uintptr_t*)(").and_then(|s| s.strip_suffix(")")) {
+        // e.g. &*(uintptr_t*)(rax+0x1) → (rax + 1)
+        return simplify_ptr_inner(inner);
+    }
+
+    // ── Simplify [brackets] → *(uintptr_t*)(X) with simplified inner ──
     if s.contains('[') {
         let mut out = String::new();
-        let chars: Vec<char> = s.chars().collect();
-        let mut i = 0;
-        while i < chars.len() {
-            if chars[i] == '[' {
-                out.push_str("*(uintptr_t*)(");
-            } else if chars[i] == ']' {
-                out.push(')');
+        let mut depth = 0usize;
+        let mut inner_buf = String::new();
+
+        for ch in s.chars() {
+            if ch == '[' {
+                if depth == 0 {
+                    inner_buf.clear();
+                } else {
+                    inner_buf.push(ch);
+                }
+                depth += 1;
+            } else if ch == ']' {
+                depth -= 1;
+                if depth == 0 {
+                    let simplified = simplify_ptr_inner(&inner_buf);
+                    out.push_str(&format!("*({})", simplified));
+                } else {
+                    inner_buf.push(ch);
+                }
+            } else if depth > 0 {
+                inner_buf.push(ch);
             } else {
-                out.push(chars[i]);
+                out.push(ch);
             }
-            i += 1;
         }
         return out;
     }
+
+    // ── Already-converted *(uintptr_t*)(REG+0xN) → simplify ──
+    if let Some(inner) = s.strip_prefix("*(uintptr_t*)(").and_then(|s| s.strip_suffix(")")) {
+        let simplified = simplify_ptr_inner(inner);
+        return format!("*({})", simplified);
+    }
+
     s.to_string()
 }
+
+/// Simplify the inner expression of a pointer dereference.
+/// Examples:
+///   "rax+0x0"  → "rax"
+///   "rax+0x1"  → "rax + 1"
+///   "r13+0x0"  → "r13"
+///   "rbx+0x10" → "rbx + 16"
+fn simplify_ptr_inner(inner: &str) -> String {
+    // Try to detect REG+0xN or REG-0xN patterns
+    let inner = inner.trim();
+
+    // REG+0x0 or REG-0x0 → just REG
+    if let Some(base) = inner.strip_suffix("+0x0")
+        .or_else(|| inner.strip_suffix("+0X0"))
+        .or_else(|| inner.strip_suffix("-0x0"))
+        .or_else(|| inner.strip_suffix("-0X0"))
+    {
+        return base.trim().to_string();
+    }
+
+    // REG+0xN → REG + N (decimal)
+    if let Some(idx) = inner.find("+0x").or_else(|| inner.find("+0X")) {
+        let base = inner[..idx].trim();
+        let hex_part = &inner[idx + 3..];
+        if let Ok(n) = u64::from_str_radix(hex_part, 16) {
+            if n > 0 {
+                return format!("{} + {}", base, n);
+            }
+        }
+    }
+
+    // REG-0xN → REG - N (decimal)
+    if let Some(idx) = inner.find("-0x").or_else(|| inner.find("-0X")) {
+        let base = inner[..idx].trim();
+        let hex_part = &inner[idx + 3..];
+        if let Ok(n) = u64::from_str_radix(hex_part, 16) {
+            if n > 0 {
+                return format!("{} - {}", base, n);
+            }
+        }
+    }
+
+    inner.to_string()
+}
+

@@ -306,8 +306,26 @@ fn emit_flat_block(c: &mut String, fb: &FlatBlock, ctx: &EmitCtx) {
 
     let insns = &fb.instructions;
     let n = insns.len();
-    let mut i = 0;
 
+    // ── Pre-pass: collect which tX vars are actually read anywhere in this block ──
+    let mut read_vars: std::collections::HashSet<String> = std::collections::HashSet::new();
+    for insn in insns.iter() {
+        for s in &insn.src {
+            read_vars.insert(s.clone());
+            // Also track base name without pointer notation
+            if let Some(inner) = s.strip_prefix("*(uintptr_t*)(").and_then(|s| s.strip_suffix(")")) {
+                if let Some(base) = inner.split('+').next() {
+                    read_vars.insert(base.trim().to_string());
+                }
+            }
+        }
+        // Stores and calls have side effects — their dst is effectively "read"
+        if insn.op == "store" || insn.op == "call" {
+            if let Some(d) = &insn.dst { read_vars.insert(d.clone()); }
+        }
+    }
+
+    let mut i = 0;
     while i < n {
         let insn = &insns[i];
 
@@ -327,6 +345,17 @@ fn emit_flat_block(c: &mut String, fb: &FlatBlock, ctx: &EmitCtx) {
         if insn.op == "nop" {
             i += 1;
             continue;
+        }
+
+        // ── Skip dead assignments to tX temp vars nobody reads ──
+        if matches!(insn.op.as_str(), "assign" | "add" | "sub" | "lea" | "movzx" | "movsx" | "movabs" | "pop") {
+            if let Some(dst) = &insn.dst {
+                let is_tvar = dst.starts_with('t') && dst[1..].chars().all(|c| c.is_ascii_digit());
+                if is_tvar && !read_vars.contains(dst) {
+                    i += 1;
+                    continue;
+                }
+            }
         }
 
         // ── CALL (prepared) ──
